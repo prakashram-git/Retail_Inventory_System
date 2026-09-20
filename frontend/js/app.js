@@ -55,9 +55,22 @@ class SwiftStock {
                 const page = item.getAttribute('data-page');
                 if (page) {
                     this.showPage(page);
+                    this.closeMobileSidebar();
                 }
             });
         });
+
+        // Mobile hamburger menu
+        const hamburger = document.getElementById('hamburger');
+        if (hamburger) {
+            hamburger.addEventListener('click', () => this.toggleMobileSidebar());
+        }
+
+        // Close sidebar when clicking overlay
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => this.closeMobileSidebar());
+        }
 
         // Theme toggle
         document.getElementById('themeToggle').addEventListener('click', () => this.toggleTheme());
@@ -67,6 +80,28 @@ class SwiftStock {
         document.getElementById('registerForm').addEventListener('submit', (e) => this.handleRegister(e));
         document.getElementById('switchToRegister').addEventListener('click', () => this.switchToRegister());
         document.getElementById('switchToLogin').addEventListener('click', () => this.switchToLogin());
+    }
+
+    toggleMobileSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (sidebar) {
+            sidebar.classList.toggle('active');
+        }
+        if (overlay) {
+            overlay.classList.toggle('active');
+        }
+    }
+
+    closeMobileSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (sidebar) {
+            sidebar.classList.remove('active');
+        }
+        if (overlay) {
+            overlay.classList.remove('active');
+        }
     }
 
     showPage(page) {
