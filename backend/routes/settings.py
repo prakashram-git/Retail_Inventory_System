@@ -30,20 +30,26 @@ async def update_settings(
     # User is authenticated via token, all users have admin access in this system
     # For multi-user systems, check user role from database
 
-    result = await db.execute(select(AppSettings).limit(1))
-    settings = result.scalars().first()
+    try:
+        result = await db.execute(select(AppSettings).limit(1))
+        settings = result.scalars().first()
 
-    if not settings:
-        settings = AppSettings()
-        db.add(settings)
+        if not settings:
+            settings = AppSettings()
+            db.add(settings)
 
-    update_data = settings_data.model_dump(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(settings, key, value)
+        update_data = settings_data.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(settings, key, value)
 
-    await db.commit()
-    await db.refresh(settings)
-    return settings
+        await db.commit()
+        await db.refresh(settings)
+        return settings
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update settings: {str(e)}"
+        )
 
 @router.post("/logo")
 async def upload_logo(
@@ -54,16 +60,22 @@ async def upload_logo(
     # User is authenticated via token, all users have admin access in this system
     # For multi-user systems, check user role from database
 
-    result = await db.execute(select(AppSettings).limit(1))
-    settings = result.scalars().first()
+    try:
+        result = await db.execute(select(AppSettings).limit(1))
+        settings = result.scalars().first()
 
-    if not settings:
-        settings = AppSettings()
-        db.add(settings)
+        if not settings:
+            settings = AppSettings()
+            db.add(settings)
 
-    import base64
-    encoded = base64.b64encode(file).decode()
-    settings.store_logo_path = f"data:image/png;base64,{encoded}"
+        import base64
+        encoded = base64.b64encode(file).decode()
+        settings.store_logo_path = f"data:image/png;base64,{encoded}"
 
-    await db.commit()
-    return {"message": "Logo uploaded successfully"}
+        await db.commit()
+        return {"message": "Logo uploaded successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to upload logo: {str(e)}"
+        )
