@@ -22,6 +22,11 @@ class SwiftStock {
             // Show app, hide login modal
             document.getElementById('app').classList.remove('hidden');
             document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('currentUser').textContent = this.user.username;
+            const dropdownUsername = document.getElementById('dropdownUsername');
+            if (dropdownUsername) {
+                dropdownUsername.textContent = this.user.username;
+            }
             await this.loadSettings();
             this.showPage('dashboard');
         }
@@ -75,6 +80,50 @@ class SwiftStock {
 
         // Theme toggle
         document.getElementById('themeToggle').addEventListener('click', () => this.toggleTheme());
+
+        // User dropdown menu
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userDropdown = document.getElementById('userDropdown');
+        const logoutDropdownBtn = document.getElementById('logoutDropdownBtn');
+        const profileLink = document.getElementById('profileLink');
+        const settingsLink = document.getElementById('settingsLink');
+
+        if (userMenuBtn) {
+            userMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('hidden');
+            });
+        }
+
+        if (logoutDropdownBtn) {
+            logoutDropdownBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.logout();
+            });
+        }
+
+        if (profileLink) {
+            profileLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                userDropdown.classList.add('hidden');
+                // Profile functionality can be added here
+            });
+        }
+
+        if (settingsLink) {
+            settingsLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                userDropdown.classList.add('hidden');
+                this.showPage('setup');
+            });
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (userDropdown && userMenuBtn && !userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.add('hidden');
+            }
+        });
 
         // Auth forms
         document.getElementById('loginForm').addEventListener('submit', (e) => this.handleLogin(e));
@@ -1216,6 +1265,10 @@ class SwiftStock {
             document.getElementById('app').classList.remove('hidden');
             document.getElementById('loginModal').classList.add('hidden');
             document.getElementById('currentUser').textContent = this.user.username;
+            const dropdownUsername = document.getElementById('dropdownUsername');
+            if (dropdownUsername) {
+                dropdownUsername.textContent = this.user.username;
+            }
 
             await this.loadSettings();
             this.showPage('dashboard');
