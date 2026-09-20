@@ -27,7 +27,7 @@ class TokenResponse(BaseModel):
     user: UserResponse
 
 class ProductCreate(BaseModel):
-    sku: str
+    sku: Optional[str] = None
     name: str
     category: str
     description: Optional[str] = None

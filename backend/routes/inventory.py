@@ -22,11 +22,32 @@ async def create_product(
     db: AsyncSession = Depends(get_db),
     current_user: str = Depends(get_current_user)
 ):
-    result = await db.execute(select(Product).where(Product.sku == product_data.sku))
-    existing = result.scalars().first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Product with this SKU already exists")
+    # Auto-generate SKU if not provided
+    sku = product_data.sku
+    if not sku:
+        # Get the highest existing SKU number
+        result = await db.execute(select(Product.sku))
+        existing_skus = result.scalars().all()
 
+        # Extract numbers from SKUs that match pattern "PRD-XXXX"
+        max_num = 0
+        for existing_sku in existing_skus:
+            if existing_sku and existing_sku.startswith("PRD-"):
+                try:
+                    num = int(existing_sku.replace("PRD-", ""))
+                    max_num = max(max_num, num)
+                except ValueError:
+                    pass
+
+        sku = f"PRD-{str(max_num + 1).zfill(4)}"
+    else:
+        # Check if provided SKU already exists
+        result = await db.execute(select(Product).where(Product.sku == sku))
+        existing = result.scalars().first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Product with this SKU already exists")
+
+    product_data.sku = sku
     product = Product(**product_data.model_dump())
     update_product_status(product)
     db.add(product)

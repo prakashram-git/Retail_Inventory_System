@@ -268,11 +268,8 @@ class SwiftStock {
         modal.innerHTML = `
             <div class="card p-8 rounded-lg w-96 shadow-xl">
                 <h2 class="text-2xl font-bold mb-4">Add New Product</h2>
+                <p class="text-xs text-gray-400 mb-4">SKU will be auto-generated</p>
                 <form id="addProductForm" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-semibold mb-2">SKU *</label>
-                        <input type="text" id="formSKU" class="input-field w-full p-2 rounded-lg" required>
-                    </div>
                     <div>
                         <label class="block text-sm font-semibold mb-2">Product Name *</label>
                         <input type="text" id="formName" class="input-field w-full p-2 rounded-lg" required>
@@ -310,7 +307,6 @@ class SwiftStock {
             e.preventDefault();
             try {
                 await this.apiFetch(`${this.apiBase}/inventory/products`, 'POST', {
-                    sku: document.getElementById('formSKU').value,
                     name: document.getElementById('formName').value,
                     category: document.getElementById('formCategory').value,
                     cost_price: parseFloat(document.getElementById('formCostPrice').value),
@@ -398,11 +394,8 @@ class SwiftStock {
 
                 <div class="card p-6 rounded-lg">
                     <h3 class="text-xl font-bold mb-4">Create New Product</h3>
+                    <p class="text-xs text-gray-400 mb-4">SKU will be auto-generated</p>
                     <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-semibold mb-2">SKU *</label>
-                            <input type="text" id="newSKU" class="input-field w-full p-2 rounded-lg" required>
-                        </div>
                         <div>
                             <label class="block text-sm font-semibold mb-2">Product Name *</label>
                             <input type="text" id="newName" class="input-field w-full p-2 rounded-lg" required>
@@ -469,7 +462,6 @@ class SwiftStock {
         document.getElementById('createProductBtn').addEventListener('click', async () => {
             try {
                 await this.apiFetch(`${this.apiBase}/pos/create-product`, 'POST', {
-                    sku: document.getElementById('newSKU').value,
                     name: document.getElementById('newName').value,
                     category: document.getElementById('newCategory').value,
                     cost_price: parseFloat(document.getElementById('newCostPrice').value),
@@ -479,7 +471,6 @@ class SwiftStock {
                 });
                 this.showToast('Product created successfully');
                 // Clear form
-                document.getElementById('newSKU').value = '';
                 document.getElementById('newName').value = '';
                 document.getElementById('newCategory').value = '';
                 document.getElementById('newCostPrice').value = '';
