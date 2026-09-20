@@ -364,15 +364,167 @@ class SwiftStock {
         });
     }
 
+    downloadCSVTemplate() {
+        const headers = ['name', 'category', 'cost_price', 'unit_price', 'quantity_in_stock', 'reorder_level'];
+        const sampleData = [
+            ['Laptop', 'Electronics', '500', '800', '5', '2'],
+            ['Mouse', 'Accessories', '10', '15', '50', '10'],
+            ['Keyboard', 'Accessories', '25', '40', '30', '8']
+        ];
+
+        const csvContent = [
+            headers.join(','),
+            ...sampleData.map(row => row.join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'products_template.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    }
+
+    showImportCSVModal() {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        modal.innerHTML = `
+            <div class="card p-8 rounded-lg w-full max-w-2xl shadow-xl max-h-96 overflow-y-auto">
+                <h2 class="text-2xl font-bold mb-2">Import Products from CSV</h2>
+                <p class="text-gray-400 mb-6">Bulk add multiple products at once</p>
+
+                <div class="space-y-4">
+                    <div>
+                        <button id="downloadTemplateBtn" class="mb-4 bg-gray-700 text-white p-2 rounded-lg font-semibold hover:bg-gray-600 flex items-center gap-2">
+                            <i class="fas fa-download"></i>
+                            Download CSV Template
+                        </button>
+                        <label class="block text-sm font-semibold mb-2">Select CSV File *</label>
+                        <input type="file" id="csvFile" class="input-field w-full p-2 rounded-lg" accept=".csv" required>
+                        <p class="text-xs text-gray-400 mt-2">Required columns: name, category, cost_price, unit_price, quantity_in_stock, reorder_level</p>
+                    </div>
+
+                    <div id="csvPreview" class="hidden">
+                        <label class="block text-sm font-semibold mb-2">Preview (first 5 rows):</label>
+                        <div class="bg-gray-900 p-3 rounded-lg overflow-x-auto text-xs">
+                            <table class="w-full">
+                                <tbody id="previewTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button id="importBtn" class="btn-primary flex-1 p-2 rounded-lg font-semibold">Import Products</button>
+                        <button type="button" class="btn-secondary flex-1 p-2 rounded-lg font-semibold bg-gray-700 text-white" onclick="this.closest('div').parentElement.remove()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        document.getElementById('downloadTemplateBtn').addEventListener('click', () => this.downloadCSVTemplate());
+
+        document.getElementById('csvFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const csv = event.target.result;
+                    const lines = csv.trim().split('\n');
+                    const preview = document.getElementById('csvPreview');
+                    const previewTable = document.getElementById('previewTable');
+
+                    previewTable.innerHTML = '';
+                    const rowLimit = Math.min(5, lines.length);
+
+                    for (let i = 0; i < rowLimit; i++) {
+                        const cols = lines[i].split(',');
+                        const row = document.createElement('tr');
+                        row.innerHTML = cols.map(col => `<td class="p-2 border-b border-gray-700">${col.trim()}</td>`).join('');
+                        previewTable.appendChild(row);
+                    }
+
+                    preview.classList.remove('hidden');
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        document.getElementById('importBtn').addEventListener('click', async () => {
+            const file = document.getElementById('csvFile').files[0];
+            if (!file) {
+                alert('Please select a CSV file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const csv = event.target.result;
+                    const lines = csv.trim().split('\n');
+                    const headers = lines[0].split(',').map(h => h.trim());
+                    const products = [];
+
+                    for (let i = 1; i < lines.length; i++) {
+                        const values = lines[i].split(',').map(v => v.trim());
+                        if (values.some(v => v)) {
+                            const product = {};
+                            headers.forEach((header, index) => {
+                                if (header === 'cost_price' || header === 'unit_price' || header === 'reorder_level' || header === 'quantity_in_stock') {
+                                    product[header] = parseFloat(values[index]) || 0;
+                                } else {
+                                    product[header] = values[index];
+                                }
+                            });
+                            products.push(product);
+                        }
+                    }
+
+                    if (products.length === 0) {
+                        alert('No valid products found in CSV');
+                        return;
+                    }
+
+                    const response = await this.apiFetch(`${this.apiBase}/pos/import-products`, 'POST', { products });
+                    this.showToast(`Successfully imported ${response.imported_count} products`);
+                    modal.remove();
+                    this.loadPOS();
+                } catch(error) {
+                    alert('Error importing products: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        });
+    }
+
     async loadPOS() {
         document.getElementById('pageTitle').textContent = 'POS Register';
         document.getElementById('pageSubtitle').textContent = 'Stock intake and product management';
 
         const content = document.getElementById('pageContent');
-        content.innerHTML = `
+
+        // Action buttons header
+        const buttonsHTML = `
+            <div class="flex gap-3 mb-6">
+                <button id="importCSVBtn" class="bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg font-semibold flex items-center gap-2 transition">
+                    <i class="fas fa-plus"></i>
+                    <i class="fas fa-file-csv"></i>
+                    Import CSV
+                </button>
+                <button id="createQuickBtn" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-semibold flex items-center gap-2 transition">
+                    <i class="fas fa-plus"></i>
+                    Add Single Product
+                </button>
+            </div>
+        `;
+
+        content.innerHTML = buttonsHTML + `
             <div class="grid grid-cols-2 gap-6">
                 <div class="card p-6 rounded-lg">
-                    <h3 class="text-xl font-bold mb-4">Add Stock to Existing Product</h3>
+                    <h3 class="text-xl font-bold mb-4"><i class="fas fa-boxes mr-2"></i>Add Stock to Existing Product</h3>
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-semibold mb-2">Select Product</label>
@@ -392,9 +544,9 @@ class SwiftStock {
                     </div>
                 </div>
 
-                <div class="card p-6 rounded-lg">
-                    <h3 class="text-xl font-bold mb-4">Create New Product</h3>
-                    <p class="text-xs text-gray-400 mb-4">SKU will be auto-generated</p>
+                <div class="card p-6 rounded-lg" id="createProductSection">
+                    <h3 class="text-xl font-bold mb-4"><i class="fas fa-plus-circle mr-2"></i>Create New Product</h3>
+                    <p class="text-xs text-gray-400 mb-4"><i class="fas fa-info-circle"></i> SKU will be auto-generated</p>
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-semibold mb-2">Product Name *</label>
@@ -436,6 +588,9 @@ class SwiftStock {
         } catch(error) {
             console.error('Error loading products:', error);
         }
+
+        // Import CSV button
+        document.getElementById('importCSVBtn').addEventListener('click', () => this.showImportCSVModal());
 
         // Add stock button
         document.getElementById('addStockBtn').addEventListener('click', async () => {

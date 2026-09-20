@@ -1,0 +1,16 @@
+name,category,cost_price,unit_price,quantity_in_stock,reorder_level
+Laptop,Electronics,500,800,5,2
+Desktop Computer,Electronics,800,1200,3,1
+USB Cable,Accessories,2,5,100,20
+Mouse,Accessories,10,15,50,10
+Keyboard,Accessories,25,40,30,8
+Monitor,Electronics,150,250,10,3
+Printer Paper,Office Supplies,5,8,200,50
+Pen Set,Office Supplies,3,5,150,30
+Notebook,Office Supplies,2,4,100,25
+Desk Lamp,Office,20,35,15,5
+Office Chair,Furniture,100,180,8,2
+Desk,Furniture,250,450,6,1
+Bookshelf,Furniture,80,150,5,1
+Coffee Maker,Electronics,30,50,10,3
+USB Hub,Accessories,15,25,40,8
