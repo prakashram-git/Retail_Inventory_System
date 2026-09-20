@@ -72,6 +72,42 @@ class SwiftStock {
             hamburger.addEventListener('click', () => this.toggleMobileSidebar());
         }
 
+        // Mobile top navigation menu
+        const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
+        mobileNavItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                const page = item.getAttribute('data-page');
+                if (page) {
+                    this.showPage(page);
+                    // Update active state on mobile nav
+                    mobileNavItems.forEach(btn => btn.classList.remove('active'));
+                    item.classList.add('active');
+                    // Scroll to the clicked item in mobile nav
+                    const mobileNavMenu = document.getElementById('mobileNavMenu');
+                    if (mobileNavMenu) {
+                        item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+                    }
+                }
+            });
+        });
+
+        // Mobile theme toggle
+        const themeToggleMobile = document.getElementById('themeToggleMobile');
+        if (themeToggleMobile) {
+            themeToggleMobile.addEventListener('click', () => this.toggleTheme());
+        }
+
+        // Mobile user menu
+        const userMenuBtnMobile = document.getElementById('userMenuBtnMobile');
+        if (userMenuBtnMobile) {
+            userMenuBtnMobile.addEventListener('click', () => {
+                const userDropdown = document.getElementById('userDropdown');
+                if (userDropdown) {
+                    userDropdown.classList.toggle('hidden');
+                }
+            });
+        }
+
         // Close sidebar when clicking overlay
         const sidebarOverlay = document.getElementById('sidebarOverlay');
         if (sidebarOverlay) {
@@ -157,8 +193,16 @@ class SwiftStock {
     showPage(page) {
         this.currentPage = page;
 
-        // Update active nav item
+        // Update active nav item in sidebar
         document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+            if (item.getAttribute('data-page') === page) {
+                item.classList.add('active');
+            }
+        });
+
+        // Update active nav item in mobile top nav
+        document.querySelectorAll('.mobile-nav-item').forEach(item => {
             item.classList.remove('active');
             if (item.getAttribute('data-page') === page) {
                 item.classList.add('active');
@@ -1218,6 +1262,7 @@ class SwiftStock {
         const storeName = this.settings.store_name || 'SwiftStock';
         const firstLetter = storeName.charAt(0).toUpperCase();
 
+        // Update sidebar logo
         const logoText = document.getElementById('logoText');
         const storeTitle = document.querySelector('.sidebar h1');
 
@@ -1227,6 +1272,18 @@ class SwiftStock {
 
         if (storeTitle) {
             storeTitle.textContent = storeName;
+        }
+
+        // Update mobile nav logo
+        const mobileLogoText = document.getElementById('mobileLogoText');
+        const mobileStoreName = document.getElementById('mobileStoreName');
+
+        if (mobileLogoText) {
+            mobileLogoText.textContent = firstLetter;
+        }
+
+        if (mobileStoreName) {
+            mobileStoreName.textContent = storeName;
         }
     }
 

@@ -345,10 +345,243 @@
                 display: none !important;
             }
         }
+
+        /* Mobile Top Navigation Bar */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: auto;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 45;
+            padding: 0;
+            margin: 0;
+        }
+
+        .mobile-nav-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .mobile-nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: bold;
+            text-decoration: none;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .mobile-nav-logo-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 0.875rem;
+        }
+
+        .mobile-nav-logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mobile-nav-logo-text h3 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .mobile-nav-logo-text p {
+            margin: 0;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .mobile-nav-header-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .mobile-nav-menu {
+            display: flex;
+            gap: 0;
+            overflow-x: auto;
+            padding: 0.5rem 0;
+            margin: 0;
+            list-style: none;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .mobile-nav-menu::-webkit-scrollbar {
+            height: 2px;
+        }
+
+        .mobile-nav-menu::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .mobile-nav-menu::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 2px;
+        }
+
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 0.75rem;
+            min-width: 60px;
+            border: none;
+            background: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .mobile-nav-item:hover,
+        .mobile-nav-item.active {
+            color: var(--accent-color);
+        }
+
+        .mobile-nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent-color);
+            border-radius: 3px 3px 0 0;
+        }
+
+        .mobile-nav-item i {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .mobile-nav-item span {
+            font-size: 0.65rem;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-nav {
+                display: block;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .ml-64 {
+                margin-left: 0 !important;
+                margin-top: 0;
+            }
+
+            .sticky {
+                margin-top: 140px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sticky {
+                margin-top: 140px;
+            }
+
+            .mobile-nav-logo-text h3 {
+                font-size: 0.9rem;
+            }
+
+            .mobile-nav-item span {
+                font-size: 0.6rem;
+            }
+        }
     </style>
 </head>
 <body class="transition-colors duration-300">
-    <div id="app" class="flex h-screen hidden">
+    <div id="app" class="flex h-screen hidden flex-col">
+        <!-- Mobile Top Navigation Bar -->
+        <nav class="mobile-nav">
+            <div class="mobile-nav-header">
+                <a href="#" class="mobile-nav-logo" id="mobileNavLogo">
+                    <div class="mobile-nav-logo-icon">
+                        <span id="mobileLogoText">S</span>
+                    </div>
+                    <div class="mobile-nav-logo-text">
+                        <h3 id="mobileStoreName">SwiftStock</h3>
+                        <p>Inventory</p>
+                    </div>
+                </a>
+                <div class="mobile-nav-header-controls">
+                    <button id="themeToggleMobile" class="p-2 rounded-lg hover:bg-gray-700" title="Toggle Theme">
+                        <i class="fas fa-moon text-sm"></i>
+                    </button>
+                    <button id="userMenuBtnMobile" class="p-2 rounded-lg hover:bg-gray-700" title="User Menu">
+                        <i class="fas fa-user-circle text-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <ul class="mobile-nav-menu" id="mobileNavMenu">
+                <li>
+                    <button class="mobile-nav-item active" data-page="dashboard" title="Dashboard">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="mobile-nav-item" data-page="inventory" title="Inventory">
+                        <i class="fas fa-boxes"></i>
+                        <span>Inventory</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="mobile-nav-item" data-page="pos" title="POS">
+                        <i class="fas fa-cash-register"></i>
+                        <span>POS</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="mobile-nav-item" data-page="reports" title="Reports">
+                        <i class="fas fa-file-chart-line"></i>
+                        <span>Reports</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="mobile-nav-item" data-page="setup" title="Setup">
+                        <i class="fas fa-cog"></i>
+                        <span>Setup</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="mobile-nav-item" data-page="about" title="About">
+                        <i class="fas fa-info-circle"></i>
+                        <span>About</span>
+                    </button>
+                </li>
+            </ul>
+        </nav>
+
         <!-- Sidebar -->
         <div class="sidebar w-64 h-screen overflow-y-auto fixed left-0 top-0 z-40">
             <div class="p-6 border-b border-gray-700">
