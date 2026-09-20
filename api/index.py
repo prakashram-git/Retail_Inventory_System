@@ -7,19 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
-# Initialize database first
-from backend.database import init_db, AsyncSessionLocal
-from backend.models.user import User
-from backend.config import DEFAULT_USERNAME, DEFAULT_PASSWORD
-import asyncio
-
-# Run async init in sync context for app startup
-try:
-    asyncio.run(init_db())
-except Exception as e:
-    print(f"Warning: Could not initialize DB: {e}")
-
-# Now import routes
+from backend.database import init_db
 from backend.routes import auth, inventory, pos, reports, settings
 
 app = FastAPI(
@@ -27,6 +15,16 @@ app = FastAPI(
     description="Retail Inventory Management System",
     version="1.0.0"
 )
+
+@app.on_event("startup")
+async def startup_event():
+    try:
+        await init_db()
+        print("Database initialized successfully")
+    except Exception as e:
+        print(f"Error initializing database: {e}")
+        import traceback
+        traceback.print_exc()
 
 app.add_middleware(
     CORSMiddleware,
@@ -48,9 +46,12 @@ frontend_dir = Path(__file__).parent.parent / "frontend"
 index_html_path = frontend_dir / "index.html"
 
 INDEX_HTML = None
-if index_html_path.exists():
-    with open(index_html_path, 'r', encoding='utf-8') as f:
-        INDEX_HTML = f.read()
+try:
+    if index_html_path.exists():
+        with open(index_html_path, 'r', encoding='utf-8') as f:
+            INDEX_HTML = f.read()
+except Exception as e:
+    print(f"Error reading index.html: {e}")
 
 @app.get("/")
 async def root():
