@@ -53,21 +53,10 @@ app.include_router(pos.router)
 app.include_router(reports.router)
 app.include_router(settings.router)
 
-# Serve frontend
-frontend_dir = Path(__file__).parent.parent / "frontend"
-if frontend_dir.exists():
-    try:
-        app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
-    except Exception as e:
-        print(f"Warning: Could not mount static files: {e}")
-
-@app.get("/")
-async def read_root():
-    index_file = frontend_dir / "index.html"
-    if index_file.exists():
-        return FileResponse(index_file)
-    return {"message": "SwiftStock API running"}
-
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+@app.get("/api/health")
+async def api_health():
+    return {"status": "ok", "service": "SwiftStock API"}
