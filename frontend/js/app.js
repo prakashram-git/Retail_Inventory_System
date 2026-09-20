@@ -5,6 +5,7 @@ class SwiftStock {
         this.user = JSON.parse(localStorage.getItem('user') || '{}');
         this.currentPage = 'dashboard';
         this.theme = localStorage.getItem('theme') || 'dark';
+        this.settings = {};
         this.apiBase = '/api';
         this.init();
     }
@@ -1036,11 +1037,13 @@ class SwiftStock {
             document.getElementById('settingsForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 try {
-                    await this.apiFetch(`${this.apiBase}/settings`, 'PUT', {
+                    const updatedSettings = await this.apiFetch(`${this.apiBase}/settings`, 'PUT', {
                         store_name: document.getElementById('storeName').value,
                         currency_symbol: document.getElementById('currencySymbol').value,
                         low_stock_threshold: parseInt(document.getElementById('lowStockThreshold').value)
                     });
+                    this.settings = updatedSettings;
+                    this.updateSidebarLogo();
                     this.showToast('Settings saved successfully');
                 } catch(error) {
                     alert('Error: ' + error.message);
@@ -1139,12 +1142,30 @@ class SwiftStock {
     async loadSettings() {
         try {
             const settings = await this.apiFetch(`${this.apiBase}/settings`);
+            this.settings = settings;
             if (settings.theme && settings.theme !== this.theme) {
                 this.theme = settings.theme;
                 this.setupTheme();
             }
+            this.updateSidebarLogo();
         } catch(error) {
             console.log('Could not load remote settings');
+        }
+    }
+
+    updateSidebarLogo() {
+        const storeName = this.settings.store_name || 'SwiftStock';
+        const firstLetter = storeName.charAt(0).toUpperCase();
+
+        const logoText = document.getElementById('logoText');
+        const storeTitle = document.querySelector('.sidebar h1');
+
+        if (logoText) {
+            logoText.textContent = firstLetter;
+        }
+
+        if (storeTitle) {
+            storeTitle.textContent = storeName;
         }
     }
 
