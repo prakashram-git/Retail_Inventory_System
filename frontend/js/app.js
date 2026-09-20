@@ -695,91 +695,192 @@ class SwiftStock {
 
     async loadReports() {
         document.getElementById('pageTitle').textContent = 'Reports';
-        document.getElementById('pageSubtitle').textContent = 'Inventory analytics and insights';
+        document.getElementById('pageSubtitle').textContent = 'Professional inventory analysis and reporting';
 
         const content = document.getElementById('pageContent');
-        content.innerHTML = `
-            <div class="grid grid-cols-2 gap-6 mb-6">
-                <div class="card p-6 rounded-lg">
-                    <h3 class="text-lg font-semibold mb-4">Inventory Summary</h3>
-                    <div id="summaryStats"></div>
-                </div>
-                <div class="card p-6 rounded-lg">
-                    <h3 class="text-lg font-semibold mb-4">Stock by Category</h3>
-                    <div id="categoryStats"></div>
-                </div>
-            </div>
-            <div class="card p-6 rounded-lg">
-                <h3 class="text-lg font-semibold mb-4">Product Availability Chart</h3>
-                <canvas id="availabilityChart"></canvas>
-            </div>
-        `;
+        content.innerHTML = '<div class="flex justify-center items-center h-64"><i class="fas fa-spinner fa-spin text-2xl"></i></div>';
 
         try {
             const summary = await this.apiFetch(`${this.apiBase}/reports/inventory-summary`);
             const categoryStats = await this.apiFetch(`${this.apiBase}/reports/stock-by-category`);
             const products = await this.apiFetch(`${this.apiBase}/reports/product-availability`);
+            const settings = await this.apiFetch(`${this.apiBase}/settings`);
 
-            // Summary stats
-            document.getElementById('summaryStats').innerHTML = `
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between"><span>Total Products:</span><span class="font-bold">${summary.total_products}</span></div>
-                    <div class="flex justify-between"><span>Total Items:</span><span class="font-bold">${summary.total_items}</span></div>
-                    <div class="flex justify-between"><span>Inventory Value:</span><span class="font-bold">$${summary.total_inventory_value.toFixed(2)}</span></div>
-                    <div class="flex justify-between"><span>Low Stock:</span><span class="font-bold text-orange-500">${summary.low_stock_count}</span></div>
-                    <div class="flex justify-between"><span>Out of Stock:</span><span class="font-bold text-red-500">${summary.out_of_stock_count}</span></div>
+            const reportDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            const reportTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+            // Professional Report Layout
+            content.innerHTML = `
+                <div id="reportContainer" class="bg-white text-gray-900 p-8 rounded-lg shadow-2xl">
+                    <!-- Report Header -->
+                    <div class="border-b-2 border-gray-300 pb-4 mb-6">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h1 class="text-3xl font-bold text-gray-900">INVENTORY REPORT</h1>
+                                <p class="text-sm text-gray-600 mt-1">${settings.store_name || 'SwiftStock Inventory System'}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-500">Report Date: ${reportDate}</p>
+                                <p class="text-xs text-gray-500">Report Time: ${reportTime}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Executive Summary - 4 Column Grid -->
+                    <div class="grid grid-cols-4 gap-4 mb-8">
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border-l-4 border-blue-500">
+                            <p class="text-xs font-semibold text-gray-600 uppercase">Total Products</p>
+                            <p class="text-2xl font-bold text-blue-700 mt-2">${summary.total_products}</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border-l-4 border-green-500">
+                            <p class="text-xs font-semibold text-gray-600 uppercase">Total Units</p>
+                            <p class="text-2xl font-bold text-green-700 mt-2">${summary.total_items.toLocaleString()}</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border-l-4 border-purple-500">
+                            <p class="text-xs font-semibold text-gray-600 uppercase">Inventory Value</p>
+                            <p class="text-2xl font-bold text-purple-700 mt-2">${settings.currency_symbol}${summary.total_inventory_value.toFixed(2)}</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-amber-50 to-amber-100 p-4 rounded-lg border-l-4 border-amber-500">
+                            <p class="text-xs font-semibold text-gray-600 uppercase">Alerts</p>
+                            <p class="text-2xl font-bold text-amber-700 mt-2">${summary.low_stock_count + summary.out_of_stock_count}</p>
+                        </div>
+                    </div>
+
+                    <!-- Stock Status Summary -->
+                    <div class="grid grid-cols-3 gap-4 mb-8">
+                        <div class="p-4 border border-gray-300 rounded-lg">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs font-semibold text-gray-600 uppercase">In Stock</p>
+                                    <p class="text-xl font-bold text-green-600">${summary.total_products - summary.low_stock_count - summary.out_of_stock_count}</p>
+                                </div>
+                                <i class="fas fa-check-circle text-3xl text-green-500 opacity-20"></i>
+                            </div>
+                        </div>
+                        <div class="p-4 border border-gray-300 rounded-lg">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs font-semibold text-gray-600 uppercase">Low Stock</p>
+                                    <p class="text-xl font-bold text-orange-600">${summary.low_stock_count}</p>
+                                </div>
+                                <i class="fas fa-exclamation-triangle text-3xl text-orange-500 opacity-20"></i>
+                            </div>
+                        </div>
+                        <div class="p-4 border border-gray-300 rounded-lg">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs font-semibold text-gray-600 uppercase">Out of Stock</p>
+                                    <p class="text-xl font-bold text-red-600">${summary.out_of_stock_count}</p>
+                                </div>
+                                <i class="fas fa-times-circle text-3xl text-red-500 opacity-20"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Breakdown -->
+                    <div class="mb-8">
+                        <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-300">Category Breakdown</h2>
+                        <div class="grid grid-cols-3 gap-4">
+                            ${Object.entries(categoryStats).map(([category, stats]) => `
+                                <div class="p-4 bg-gray-50 rounded-lg border border-gray-300">
+                                    <p class="font-semibold text-gray-900">${category}</p>
+                                    <p class="text-sm text-gray-600">${stats.product_count} SKUs</p>
+                                    <p class="text-lg font-bold text-blue-700 mt-2">${stats.total_items.toLocaleString()} units</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Product Inventory Table -->
+                    <div class="mb-8">
+                        <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-300">Product Inventory</h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm border-collapse">
+                                <thead class="bg-gray-200 text-gray-900">
+                                    <tr>
+                                        <th class="p-3 text-left font-semibold">SKU</th>
+                                        <th class="p-3 text-left font-semibold">Product</th>
+                                        <th class="p-3 text-center font-semibold">Qty</th>
+                                        <th class="p-3 text-center font-semibold">Status</th>
+                                        <th class="p-3 text-right font-semibold">Unit Price</th>
+                                        <th class="p-3 text-right font-semibold">Total Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${products.map(p => `
+                                        <tr class="border-b border-gray-300 hover:bg-gray-50">
+                                            <td class="p-3 font-mono text-xs">${p.sku}</td>
+                                            <td class="p-3"><span class="font-semibold text-gray-900">${p.name}</span><br><span class="text-xs text-gray-600">${p.category}</span></td>
+                                            <td class="p-3 text-center font-bold">${p.quantity.toLocaleString()}</td>
+                                            <td class="p-3 text-center">
+                                                <span class="px-3 py-1 rounded-full text-xs font-bold ${
+                                                    p.status === 'in_stock' ? 'bg-green-200 text-green-900' :
+                                                    p.status === 'low_stock' ? 'bg-orange-200 text-orange-900' :
+                                                    'bg-red-200 text-red-900'
+                                                }">
+                                                    ${p.status.replace('_', ' ').toUpperCase()}
+                                                </span>
+                                            </td>
+                                            <td class="p-3 text-right">${settings.currency_symbol}${p.unit_price.toFixed(2)}</td>
+                                            <td class="p-3 text-right font-bold">${settings.currency_symbol}${(p.quantity * p.unit_price).toFixed(2)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="border-t-2 border-gray-300 pt-4 mt-8 text-xs text-gray-600 flex justify-between">
+                        <div>
+                            <p>Report Generated: ${new Date().toLocaleString()}</p>
+                            <p>System: SwiftStock Inventory Management System v1.0</p>
+                        </div>
+                        <div class="text-right">
+                            <p>© ${new Date().getFullYear()} ${settings.store_name || 'SwiftStock'}</p>
+                            <p>Confidential</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PDF Export Button -->
+                <div class="mt-6 flex gap-3 justify-center">
+                    <button id="generatePDFBtn" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-3 px-8 rounded-lg shadow-lg flex items-center gap-2 transition transform hover:scale-105">
+                        <i class="fas fa-file-pdf"></i>
+                        Generate PDF Report
+                    </button>
+                    <button id="printReportBtn" class="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-bold py-3 px-8 rounded-lg shadow-lg flex items-center gap-2 transition transform hover:scale-105">
+                        <i class="fas fa-print"></i>
+                        Print Report
+                    </button>
                 </div>
             `;
 
-            // Category stats
-            let categoryHtml = '<div class="space-y-3 text-sm">';
-            for (const [category, stats] of Object.entries(categoryStats)) {
-                categoryHtml += `
-                    <div class="flex justify-between pb-2 border-b border-gray-700">
-                        <span>${category}</span>
-                        <span class="font-semibold">${stats.product_count} products (${stats.total_items} items)</span>
-                    </div>
-                `;
-            }
-            categoryHtml += '</div>';
-            document.getElementById('categoryStats').innerHTML = categoryHtml;
-
-            // Chart
-            const ctx = document.getElementById('availabilityChart').getContext('2d');
-            const chartData = {
-                labels: products.map(p => p.name),
-                datasets: [{
-                    label: 'Quantity in Stock',
-                    data: products.map(p => p.quantity),
-                    backgroundColor: products.map(p => {
-                        if (p.status === 'in_stock') return '#10b981';
-                        if (p.status === 'low_stock') return '#f59e0b';
-                        return '#ef4444';
-                    })
-                }]
-            };
-
-            new Chart(ctx, {
-                type: 'bar',
-                data: chartData,
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { color: '#d1d5db' },
-                            grid: { color: '#374151' }
-                        },
-                        x: {
-                            ticks: { color: '#d1d5db' },
-                            grid: { color: '#374151' }
-                        }
-                    }
-                }
+            // PDF Export Function
+            document.getElementById('generatePDFBtn').addEventListener('click', () => {
+                const element = document.getElementById('reportContainer');
+                const opt = {
+                    margin: 10,
+                    filename: `Inventory_Report_${reportDate.replace(/\\s+/g, '_')}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+                };
+                html2pdf().set(opt).from(element).save();
+                this.showToast('PDF report generated successfully!');
             });
+
+            // Print Function
+            document.getElementById('printReportBtn').addEventListener('click', () => {
+                const printContent = document.getElementById('reportContainer').innerHTML;
+                const originalContent = document.body.innerHTML;
+                document.body.innerHTML = printContent;
+                window.print();
+                document.body.innerHTML = originalContent;
+                this.showToast('Print dialog opened');
+                this.loadReports();
+            });
+
         } catch(error) {
             content.innerHTML = `<div class="text-red-500">Error: ${error.message}</div>`;
         }
