@@ -51,16 +51,18 @@ async def create_product_pos(
     product = Product(**product_data.model_dump())
     update_product_status(product)
 
+    db.add(product)
+    await db.flush()  # Get product.id without committing
+
     if product.quantity_in_stock > 0:
         transaction = StockTransaction(
-            product_id=None,
+            product_id=product.id,
             quantity_change=product.quantity_in_stock,
             transaction_type="inbound",
             notes="Initial stock from POS"
         )
         db.add(transaction)
 
-    db.add(product)
     await db.commit()
     await db.refresh(product)
     return product
