@@ -14,8 +14,13 @@ class SwiftStock {
         this.setupEventListeners();
 
         if (!this.token) {
+            // Keep login modal visible, hide app
+            document.getElementById('app').classList.add('hidden');
             this.showLoginModal();
         } else {
+            // Show app, hide login modal
+            document.getElementById('app').classList.remove('hidden');
+            document.getElementById('loginModal').classList.add('hidden');
             await this.loadSettings();
             this.showPage('dashboard');
         }
@@ -698,94 +703,125 @@ class SwiftStock {
         document.getElementById('pageSubtitle').textContent = 'Professional inventory analysis and reporting';
 
         const content = document.getElementById('pageContent');
-        content.innerHTML = '<div class="flex justify-center items-center h-64"><i class="fas fa-spinner fa-spin text-2xl"></i></div>';
 
-        try {
-            const summary = await this.apiFetch(`${this.apiBase}/reports/inventory-summary`);
-            const categoryStats = await this.apiFetch(`${this.apiBase}/reports/stock-by-category`);
-            const products = await this.apiFetch(`${this.apiBase}/reports/product-availability`);
-            const settings = await this.apiFetch(`${this.apiBase}/settings`);
+        // Date range filter UI
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
 
-            const reportDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-            const reportTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        content.innerHTML = `
+            <div class="mb-6 p-4 card rounded-lg flex gap-4 items-end">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">From Date</label>
+                    <input type="date" id="fromDate" class="input-field p-2 rounded-lg" value="${thirtyDaysAgo.toISOString().split('T')[0]}">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">To Date</label>
+                    <input type="date" id="toDate" class="input-field p-2 rounded-lg" value="${today.toISOString().split('T')[0]}">
+                </div>
+                <button id="filterReportBtn" class="btn-primary px-6 py-2 rounded-lg font-semibold flex items-center gap-2">
+                    <i class="fas fa-filter"></i> View Report
+                </button>
+            </div>
+            <div id="reportContent"></div>
+        `;
 
-            // Professional Report Layout
-            content.innerHTML = `
-                <div id="reportContainer" class="bg-white text-gray-900 p-8 rounded-lg shadow-2xl">
+        const generateReport = async () => {
+            try {
+                document.getElementById('reportContent').innerHTML = '<div class="flex justify-center items-center h-64"><i class="fas fa-spinner fa-spin text-2xl"></i></div>';
+
+                const summary = await this.apiFetch(`${this.apiBase}/reports/inventory-summary`);
+                const categoryStats = await this.apiFetch(`${this.apiBase}/reports/stock-by-category`);
+                const products = await this.apiFetch(`${this.apiBase}/reports/product-availability`);
+                const settings = await this.apiFetch(`${this.apiBase}/settings`);
+
+                const reportDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                const reportTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+                // Professional Report Layout
+                const isDarkMode = this.theme === 'dark';
+                const bgColor = isDarkMode ? 'bg-gray-800' : 'bg-white';
+                const textPrimary = isDarkMode ? 'text-gray-100' : 'text-gray-900';
+                const textSecondary = isDarkMode ? 'text-gray-300' : 'text-gray-600';
+                const borderColor = isDarkMode ? 'border-gray-600' : 'border-gray-300';
+                const headerBg = isDarkMode ? 'bg-gray-900' : 'bg-gray-200';
+                const tableBg = isDarkMode ? 'bg-gray-700' : 'bg-gray-100';
+
+                document.getElementById('reportContent').innerHTML = `
+                <div id="reportContainer" class="${bgColor} ${textPrimary} p-8 rounded-lg shadow-2xl">
                     <!-- Report Header -->
-                    <div class="border-b-2 border-gray-300 pb-4 mb-6">
+                    <div class="border-b-2 ${borderColor} pb-4 mb-6">
                         <div class="flex justify-between items-start">
                             <div>
-                                <h1 class="text-3xl font-bold text-gray-900">INVENTORY REPORT</h1>
-                                <p class="text-sm text-gray-600 mt-1">${settings.store_name || 'SwiftStock Inventory System'}</p>
+                                <h1 class="text-3xl font-bold ${textPrimary}">INVENTORY REPORT</h1>
+                                <p class="text-sm ${textSecondary} mt-1">${settings.store_name || 'SwiftStock Inventory System'}</p>
                             </div>
                             <div class="text-right">
-                                <p class="text-xs text-gray-500">Report Date: ${reportDate}</p>
-                                <p class="text-xs text-gray-500">Report Time: ${reportTime}</p>
+                                <p class="text-xs ${textSecondary}">Report Date: ${reportDate}</p>
+                                <p class="text-xs ${textSecondary}">Report Time: ${reportTime}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Executive Summary - 4 Column Grid -->
                     <div class="grid grid-cols-4 gap-4 mb-8">
-                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border-l-4 border-blue-500">
-                            <p class="text-xs font-semibold text-gray-600 uppercase">Total Products</p>
-                            <p class="text-2xl font-bold text-blue-700 mt-2">${summary.total_products}</p>
+                        <div class="bg-gradient-to-br from-blue-600 to-blue-700 p-4 rounded-lg border-l-4 border-blue-400">
+                            <p class="text-xs font-semibold text-blue-100 uppercase">Total Products</p>
+                            <p class="text-2xl font-bold text-white mt-2">${summary.total_products}</p>
                         </div>
-                        <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border-l-4 border-green-500">
-                            <p class="text-xs font-semibold text-gray-600 uppercase">Total Units</p>
-                            <p class="text-2xl font-bold text-green-700 mt-2">${summary.total_items.toLocaleString()}</p>
+                        <div class="bg-gradient-to-br from-green-600 to-green-700 p-4 rounded-lg border-l-4 border-green-400">
+                            <p class="text-xs font-semibold text-green-100 uppercase">Total Units</p>
+                            <p class="text-2xl font-bold text-white mt-2">${summary.total_items.toLocaleString()}</p>
                         </div>
-                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border-l-4 border-purple-500">
-                            <p class="text-xs font-semibold text-gray-600 uppercase">Inventory Value</p>
-                            <p class="text-2xl font-bold text-purple-700 mt-2">${settings.currency_symbol}${summary.total_inventory_value.toFixed(2)}</p>
+                        <div class="bg-gradient-to-br from-purple-600 to-purple-700 p-4 rounded-lg border-l-4 border-purple-400">
+                            <p class="text-xs font-semibold text-purple-100 uppercase">Inventory Value</p>
+                            <p class="text-2xl font-bold text-white mt-2">${settings.currency_symbol}${summary.total_inventory_value.toFixed(2)}</p>
                         </div>
-                        <div class="bg-gradient-to-br from-amber-50 to-amber-100 p-4 rounded-lg border-l-4 border-amber-500">
-                            <p class="text-xs font-semibold text-gray-600 uppercase">Alerts</p>
-                            <p class="text-2xl font-bold text-amber-700 mt-2">${summary.low_stock_count + summary.out_of_stock_count}</p>
+                        <div class="bg-gradient-to-br from-amber-600 to-amber-700 p-4 rounded-lg border-l-4 border-amber-400">
+                            <p class="text-xs font-semibold text-amber-100 uppercase">Alerts</p>
+                            <p class="text-2xl font-bold text-white mt-2">${summary.low_stock_count + summary.out_of_stock_count}</p>
                         </div>
                     </div>
 
                     <!-- Stock Status Summary -->
                     <div class="grid grid-cols-3 gap-4 mb-8">
-                        <div class="p-4 border border-gray-300 rounded-lg">
+                        <div class="p-4 border ${borderColor} rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-xs font-semibold text-gray-600 uppercase">In Stock</p>
-                                    <p class="text-xl font-bold text-green-600">${summary.total_products - summary.low_stock_count - summary.out_of_stock_count}</p>
+                                    <p class="text-xs font-semibold ${textSecondary} uppercase">In Stock</p>
+                                    <p class="text-xl font-bold text-green-400">${summary.total_products - summary.low_stock_count - summary.out_of_stock_count}</p>
                                 </div>
-                                <i class="fas fa-check-circle text-3xl text-green-500 opacity-20"></i>
+                                <i class="fas fa-check-circle text-3xl text-green-500 opacity-30"></i>
                             </div>
                         </div>
-                        <div class="p-4 border border-gray-300 rounded-lg">
+                        <div class="p-4 border ${borderColor} rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-xs font-semibold text-gray-600 uppercase">Low Stock</p>
-                                    <p class="text-xl font-bold text-orange-600">${summary.low_stock_count}</p>
+                                    <p class="text-xs font-semibold ${textSecondary} uppercase">Low Stock</p>
+                                    <p class="text-xl font-bold text-orange-400">${summary.low_stock_count}</p>
                                 </div>
-                                <i class="fas fa-exclamation-triangle text-3xl text-orange-500 opacity-20"></i>
+                                <i class="fas fa-exclamation-triangle text-3xl text-orange-500 opacity-30"></i>
                             </div>
                         </div>
-                        <div class="p-4 border border-gray-300 rounded-lg">
+                        <div class="p-4 border ${borderColor} rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-xs font-semibold text-gray-600 uppercase">Out of Stock</p>
-                                    <p class="text-xl font-bold text-red-600">${summary.out_of_stock_count}</p>
+                                    <p class="text-xs font-semibold ${textSecondary} uppercase">Out of Stock</p>
+                                    <p class="text-xl font-bold text-red-400">${summary.out_of_stock_count}</p>
                                 </div>
-                                <i class="fas fa-times-circle text-3xl text-red-500 opacity-20"></i>
+                                <i class="fas fa-times-circle text-3xl text-red-500 opacity-30"></i>
                             </div>
                         </div>
                     </div>
 
                     <!-- Category Breakdown -->
                     <div class="mb-8">
-                        <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-300">Category Breakdown</h2>
-                        <div class="grid grid-cols-3 gap-4">
+                        <h2 class="text-lg font-bold ${textPrimary} mb-4 pb-2 border-b-2 ${borderColor}">Category Breakdown</h2>
+                        <div class="grid grid-cols-4 gap-3">
                             ${Object.entries(categoryStats).map(([category, stats]) => `
-                                <div class="p-4 bg-gray-50 rounded-lg border border-gray-300">
-                                    <p class="font-semibold text-gray-900">${category}</p>
-                                    <p class="text-sm text-gray-600">${stats.product_count} SKUs</p>
-                                    <p class="text-lg font-bold text-blue-700 mt-2">${stats.total_items.toLocaleString()} units</p>
+                                <div class="p-3 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg border ${borderColor}">
+                                    <p class="font-semibold ${textPrimary} text-sm">${category}</p>
+                                    <p class="text-xs ${textSecondary}">${stats.product_count} SKUs</p>
+                                    <p class="text-base font-bold text-blue-400 mt-1">${stats.total_items.toLocaleString()} units</p>
                                 </div>
                             `).join('')}
                         </div>
@@ -793,10 +829,10 @@ class SwiftStock {
 
                     <!-- Product Inventory Table -->
                     <div class="mb-8">
-                        <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-300">Product Inventory</h2>
+                        <h2 class="text-lg font-bold ${textPrimary} mb-4 pb-2 border-b-2 ${borderColor}">Product Inventory</h2>
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm border-collapse">
-                                <thead class="bg-gray-200 text-gray-900">
+                                <thead class="${headerBg} ${textPrimary}">
                                     <tr>
                                         <th class="p-3 text-left font-semibold">SKU</th>
                                         <th class="p-3 text-left font-semibold">Product</th>
@@ -807,31 +843,39 @@ class SwiftStock {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${products.map(p => `
-                                        <tr class="border-b border-gray-300 hover:bg-gray-50">
-                                            <td class="p-3 font-mono text-xs">${p.sku}</td>
-                                            <td class="p-3"><span class="font-semibold text-gray-900">${p.name}</span><br><span class="text-xs text-gray-600">${p.category}</span></td>
-                                            <td class="p-3 text-center font-bold">${p.quantity.toLocaleString()}</td>
-                                            <td class="p-3 text-center">
-                                                <span class="px-3 py-1 rounded-full text-xs font-bold ${
-                                                    p.status === 'in_stock' ? 'bg-green-200 text-green-900' :
-                                                    p.status === 'low_stock' ? 'bg-orange-200 text-orange-900' :
-                                                    'bg-red-200 text-red-900'
-                                                }">
-                                                    ${p.status.replace('_', ' ').toUpperCase()}
-                                                </span>
-                                            </td>
-                                            <td class="p-3 text-right">${settings.currency_symbol}${p.unit_price.toFixed(2)}</td>
-                                            <td class="p-3 text-right font-bold">${settings.currency_symbol}${(p.quantity * p.unit_price).toFixed(2)}</td>
-                                        </tr>
-                                    `).join('')}
+                                    ${products.map((p, index) => {
+                                        const altBg = index % 2 === 0 ?
+                                            (isDarkMode ? 'bg-gray-800' : 'bg-blue-50') :
+                                            (isDarkMode ? 'bg-gray-750' : 'bg-green-50');
+                                        return `
+                                            <tr class="border-b ${borderColor} ${altBg} hover:opacity-80">
+                                                <td class="p-2 font-mono text-xs font-normal">${p.sku}</td>
+                                                <td class="p-2 text-xs">
+                                                    <span class="font-bold ${textPrimary} block">${p.name}</span>
+                                                    <span class="text-xs ${textSecondary}">${p.category}</span>
+                                                </td>
+                                                <td class="p-2 text-center text-xs font-normal">${p.quantity.toLocaleString()}</td>
+                                                <td class="p-2 text-center">
+                                                    <span class="px-2 py-0.5 rounded text-xs font-bold ${
+                                                        p.status === 'in_stock' ? 'bg-green-900 text-green-200' :
+                                                        p.status === 'low_stock' ? 'bg-orange-900 text-orange-200' :
+                                                        'bg-red-900 text-red-200'
+                                                    }">
+                                                        ${p.status.replace('_', ' ').toUpperCase()}
+                                                    </span>
+                                                </td>
+                                                <td class="p-2 text-right text-xs font-normal">${settings.currency_symbol}${p.unit_price.toFixed(2)}</td>
+                                                <td class="p-2 text-right text-xs font-bold">${settings.currency_symbol}${(p.quantity * p.unit_price).toFixed(2)}</td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
                     <!-- Footer -->
-                    <div class="border-t-2 border-gray-300 pt-4 mt-8 text-xs text-gray-600 flex justify-between">
+                    <div class="border-t-2 ${borderColor} pt-4 mt-8 text-xs ${textSecondary} flex justify-between">
                         <div>
                             <p>Report Generated: ${new Date().toLocaleString()}</p>
                             <p>System: SwiftStock Inventory Management System v1.0</p>
@@ -854,36 +898,42 @@ class SwiftStock {
                         Print Report
                     </button>
                 </div>
-            `;
+                `;
 
-            // PDF Export Function
-            document.getElementById('generatePDFBtn').addEventListener('click', () => {
-                const element = document.getElementById('reportContainer');
-                const opt = {
-                    margin: 10,
-                    filename: `Inventory_Report_${reportDate.replace(/\\s+/g, '_')}.pdf`,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2 },
-                    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
-                };
-                html2pdf().set(opt).from(element).save();
-                this.showToast('PDF report generated successfully!');
-            });
+                // PDF Export Function
+                document.getElementById('generatePDFBtn').addEventListener('click', () => {
+                    const element = document.getElementById('reportContainer');
+                    const opt = {
+                        margin: 10,
+                        filename: `Inventory_Report_${reportDate.replace(/\\s+/g, '_')}.pdf`,
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2 },
+                        jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+                    };
+                    html2pdf().set(opt).from(element).save();
+                    this.showToast('PDF report generated successfully!');
+                });
 
-            // Print Function
-            document.getElementById('printReportBtn').addEventListener('click', () => {
-                const printContent = document.getElementById('reportContainer').innerHTML;
-                const originalContent = document.body.innerHTML;
-                document.body.innerHTML = printContent;
-                window.print();
-                document.body.innerHTML = originalContent;
-                this.showToast('Print dialog opened');
-                this.loadReports();
-            });
+                // Print Function
+                document.getElementById('printReportBtn').addEventListener('click', () => {
+                    const printContent = document.getElementById('reportContainer').innerHTML;
+                    const originalContent = document.body.innerHTML;
+                    document.body.innerHTML = printContent;
+                    window.print();
+                    document.body.innerHTML = originalContent;
+                    this.showToast('Print dialog opened');
+                    this.loadReports();
+                });
+            } catch(error) {
+                document.getElementById('reportContent').innerHTML = `<div class="text-red-500">Error: ${error.message}</div>`;
+            }
+        };
 
-        } catch(error) {
-            content.innerHTML = `<div class="text-red-500">Error: ${error.message}</div>`;
-        }
+        // Call generateReport on initial load
+        generateReport();
+
+        // Add event listener to filter button
+        document.getElementById('filterReportBtn').addEventListener('click', generateReport);
     }
 
     async loadSetup() {
@@ -1056,6 +1106,7 @@ class SwiftStock {
     showLoginModal() {
         document.getElementById('loginModal').classList.remove('hidden');
         document.getElementById('registerModal').classList.add('hidden');
+        document.getElementById('app').classList.add('hidden');
     }
 
     switchToRegister() {
@@ -1083,6 +1134,8 @@ class SwiftStock {
             localStorage.setItem('token', this.token);
             localStorage.setItem('user', JSON.stringify(this.user));
 
+            // Show app, hide login modal
+            document.getElementById('app').classList.remove('hidden');
             document.getElementById('loginModal').classList.add('hidden');
             document.getElementById('currentUser').textContent = this.user.username;
 
@@ -1123,7 +1176,14 @@ class SwiftStock {
         localStorage.removeItem('user');
         this.token = null;
         this.user = {};
-        this.showLoginModal();
+        // Clear form fields
+        document.getElementById('loginUsername').value = '';
+        document.getElementById('loginPassword').value = '';
+        // Show login modal and hide app
+        document.getElementById('app').classList.add('hidden');
+        document.getElementById('loginModal').classList.remove('hidden');
+        document.getElementById('registerModal').classList.add('hidden');
+        this.showToast('Logged out successfully');
     }
 
     async apiFetch(url, method = 'GET', data = null) {
