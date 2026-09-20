@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 
@@ -27,12 +27,12 @@ class TokenResponse(BaseModel):
     user: UserResponse
 
 class ProductCreate(BaseModel):
-    sku: Optional[str] = None
     name: str
     category: str
-    description: Optional[str] = None
     unit_price: float
     cost_price: float
+    sku: Optional[str] = Field(None, description="Product SKU (auto-generated if omitted)")
+    description: Optional[str] = None
     quantity_in_stock: int = 0
     reorder_level: int = 10
 
