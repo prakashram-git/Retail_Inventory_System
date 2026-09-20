@@ -5,14 +5,18 @@ from pathlib import Path
 # Setup path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
-from starlette.middleware.base import BaseHTTPMiddleware
+try:
+    from fastapi import FastAPI, Request
+    from fastapi.middleware.cors import CORSMiddleware
+    from fastapi.responses import HTMLResponse, JSONResponse
+    from starlette.middleware.base import BaseHTTPMiddleware
 
-# Import routes
-from backend.routes import auth, inventory, pos, reports, settings
-from backend.database import init_db
+    # Import routes
+    from backend.routes import auth, inventory, pos, reports, settings
+    from backend.database import init_db
+except Exception as e:
+    print(f"Import error: {e}")
+    raise
 
 # Create app WITHOUT lifespan
 app = FastAPI(
@@ -24,9 +28,22 @@ app = FastAPI(
 # Initialize DB on first request
 class DBInitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        await init_db()
-        response = await call_next(request)
-        return response
+        try:
+            await init_db()
+        except Exception as e:
+            print(f"DB init error in middleware: {e}")
+
+        try:
+            response = await call_next(request)
+            return response
+        except Exception as e:
+            print(f"Error in route handler: {e}")
+            import traceback
+            traceback.print_exc()
+            return JSONResponse(
+                status_code=500,
+                content={"error": str(e), "detail": "Internal server error"}
+            )
 
 app.add_middleware(DBInitMiddleware)
 app.add_middleware(
@@ -37,12 +54,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(auth.router)
-app.include_router(inventory.router)
-app.include_router(pos.router)
-app.include_router(reports.router)
-app.include_router(settings.router)
+# Include routers with error handling
+try:
+    app.include_router(auth.router)
+    app.include_router(inventory.router)
+    app.include_router(pos.router)
+    app.include_router(reports.router)
+    app.include_router(settings.router)
+except Exception as e:
+    print(f"Router error: {e}")
+    import traceback
+    traceback.print_exc()
 
 # Serve frontend
 frontend_dir = Path(__file__).parent.parent / "frontend"
@@ -55,6 +77,18 @@ try:
             INDEX_HTML = f.read()
 except Exception as e:
     print(f"Error reading index.html: {e}")
+
+@app.get("/api/test")
+async def test_api():
+    """Test endpoint to verify API is working"""
+    try:
+        await init_db()
+        return {"status": "ok", "message": "API working, database initialized"}
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "error": str(e)}
+        )
 
 @app.get("/")
 async def root():
@@ -69,7 +103,7 @@ async def health():
 @app.get("/{full_path:path}")
 async def catch_all(full_path: str):
     if full_path.startswith("api/"):
-        return {"error": "Not found"}
+        return JSONResponse(status_code=404, content={"error": "Not found"})
     if INDEX_HTML:
         return HTMLResponse(content=INDEX_HTML)
-    return {"error": "Not found"}
+    return JSONResponse(status_code=404, content={"error": "Not found"})
