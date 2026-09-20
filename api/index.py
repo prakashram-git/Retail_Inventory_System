@@ -63,10 +63,35 @@ async def root():
 async def health():
     return {"status": "ok"}
 
+@app.get("/static/{file_path:path}")
+async def serve_static(file_path: str):
+    """Serve static files from frontend directory"""
+    file_location = frontend_dir / file_path
+    if file_location.exists() and file_location.is_file():
+        with open(file_location, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # Determine content type
+        if file_path.endswith('.js'):
+            return HTMLResponse(content=content, media_type="application/javascript")
+        elif file_path.endswith('.css'):
+            return HTMLResponse(content=content, media_type="text/css")
+        else:
+            return HTMLResponse(content=content)
+
+    return {"error": "File not found"}
+
 @app.get("/{full_path:path}")
 async def catch_all(full_path: str):
+    """Catch-all for SPA routing - serve index.html for non-API routes"""
     if full_path.startswith("api/"):
         return {"error": "Not found"}
+
+    # Don't catch static files
+    if full_path.startswith("static/"):
+        return {"error": "Not found"}
+
+    # Serve index.html for SPA routing
     if INDEX_HTML:
         return HTMLResponse(content=INDEX_HTML)
     return {"error": "Not found"}
