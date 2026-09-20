@@ -5,29 +5,37 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import HTMLResponse
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Get proper paths
+CURRENT_DIR = Path(__file__).parent
+PROJECT_ROOT = CURRENT_DIR.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from backend.database import init_db, AsyncSessionLocal
-from backend.models.user import User
-from backend.config import DEFAULT_USERNAME, DEFAULT_PASSWORD
-from backend.routes import auth, inventory, pos, reports, settings
+try:
+    from backend.database import init_db, AsyncSessionLocal
+    from backend.models.user import User
+    from backend.config import DEFAULT_USERNAME, DEFAULT_PASSWORD
+    from backend.routes import auth, inventory, pos, reports, settings
+except ImportError as e:
+    print(f"Import error: {e}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_db()
+    try:
+        await init_db()
 
-    async with AsyncSessionLocal() as db:
-        from sqlalchemy import select
-        result = await db.execute(select(User).where(User.username == DEFAULT_USERNAME))
-        user = result.scalars().first()
-        if not user:
-            user = User(username=DEFAULT_USERNAME, is_admin=True)
-            user.set_password(DEFAULT_PASSWORD)
-            db.add(user)
-            await db.commit()
+        async with AsyncSessionLocal() as db:
+            from sqlalchemy import select
+            result = await db.execute(select(User).where(User.username == DEFAULT_USERNAME))
+            user = result.scalars().first()
+            if not user:
+                user = User(username=DEFAULT_USERNAME, is_admin=True)
+                user.set_password(DEFAULT_PASSWORD)
+                db.add(user)
+                await db.commit()
+    except Exception as e:
+        print(f"Lifespan initialization error: {e}")
 
     yield
 
@@ -46,28 +54,34 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth.router)
-app.include_router(inventory.router)
-app.include_router(pos.router)
-app.include_router(reports.router)
-app.include_router(settings.router)
+try:
+    app.include_router(auth.router)
+    app.include_router(inventory.router)
+    app.include_router(pos.router)
+    app.include_router(reports.router)
+    app.include_router(settings.router)
+except Exception as e:
+    print(f"Router inclusion error: {e}")
 
-# Serve frontend static files and index.html
-frontend_dir = Path(__file__).parent.parent / "frontend"
+# Paths
+frontend_dir = PROJECT_ROOT / "frontend"
+index_html_path = frontend_dir / "index.html"
 
-if frontend_dir.exists():
+# Read index.html at startup
+INDEX_HTML_CONTENT = None
+if index_html_path.exists():
     try:
-        app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
+        with open(index_html_path, 'r', encoding='utf-8') as f:
+            INDEX_HTML_CONTENT = f.read()
     except Exception as e:
-        print(f"Warning: Could not mount static files: {e}")
+        print(f"Error reading index.html: {e}")
 
 @app.get("/")
 async def read_root():
     """Serve index.html for SPA routing"""
-    index_file = frontend_dir / "index.html"
-    if index_file.exists():
-        return FileResponse(index_file, media_type="text/html")
-    return {"message": "SwiftStock API - Frontend not found"}
+    if INDEX_HTML_CONTENT:
+        return HTMLResponse(content=INDEX_HTML_CONTENT)
+    return {"message": "SwiftStock API running"}
 
 @app.get("/health")
 async def health():
@@ -81,10 +95,11 @@ async def api_health():
 @app.get("/{full_path:path}")
 async def catch_all(full_path: str):
     """Serve index.html for all non-API routes to support SPA routing"""
-    if full_path.startswith("api/") or full_path.startswith("static/"):
-        return {"error": "Not found"}
+    # Don't intercept actual API calls
+    if full_path.startswith("api/"):
+        return {"error": "Endpoint not found"}
 
-    index_file = frontend_dir / "index.html"
-    if index_file.exists():
-        return FileResponse(index_file, media_type="text/html")
+    # Serve index.html for all other routes
+    if INDEX_HTML_CONTENT:
+        return HTMLResponse(content=INDEX_HTML_CONTENT)
     return {"error": "Frontend not found"}
