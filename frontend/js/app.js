@@ -993,42 +993,52 @@ class SwiftStock {
             const settings = await this.apiFetch(`${this.apiBase}/settings`);
 
             content.innerHTML = `
-                <div class="grid grid-cols-2 gap-6">
-                    <div class="card p-6 rounded-lg">
-                        <h3 class="text-xl font-bold mb-4">Store Settings</h3>
-                        <form id="settingsForm" class="space-y-4">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                    <div class="card p-4 lg:p-6 rounded-lg">
+                        <h3 class="text-lg lg:text-xl font-bold mb-3 lg:mb-4">Store Settings</h3>
+                        <form id="settingsForm" class="space-y-3">
                             <div>
-                                <label class="block text-sm font-semibold mb-2">Store Name</label>
-                                <input type="text" id="storeName" class="input-field w-full p-2 rounded-lg" value="${settings.store_name}">
+                                <label class="block text-xs lg:text-sm font-semibold mb-1 lg:mb-2">Store Name</label>
+                                <input type="text" id="storeName" class="input-field w-full p-2 rounded-lg text-sm" value="${settings.store_name}">
                             </div>
                             <div>
-                                <label class="block text-sm font-semibold mb-2">Currency Symbol</label>
-                                <input type="text" id="currencySymbol" class="input-field w-full p-2 rounded-lg" value="${settings.currency_symbol}" maxlength="5">
+                                <label class="block text-xs lg:text-sm font-semibold mb-1 lg:mb-2">Currency Symbol</label>
+                                <input type="text" id="currencySymbol" class="input-field w-full p-2 rounded-lg text-sm" value="${settings.currency_symbol}" maxlength="5">
                             </div>
                             <div>
-                                <label class="block text-sm font-semibold mb-2">Low Stock Threshold</label>
-                                <input type="number" id="lowStockThreshold" class="input-field w-full p-2 rounded-lg" value="${settings.low_stock_threshold}" step="1">
+                                <label class="block text-xs lg:text-sm font-semibold mb-1 lg:mb-2">Low Stock Threshold</label>
+                                <input type="number" id="lowStockThreshold" class="input-field w-full p-2 rounded-lg text-sm" value="${settings.low_stock_threshold}" step="1">
                             </div>
-                            <button type="submit" class="btn-primary w-full p-2 rounded-lg font-semibold">Save Settings</button>
+                            <button type="submit" class="btn-primary w-full p-2 rounded-lg font-semibold text-sm lg:text-base">Save Settings</button>
                         </form>
                     </div>
 
-                    <div class="card p-6 rounded-lg">
-                        <h3 class="text-xl font-bold mb-4">Theme & Appearance</h3>
-                        <div class="space-y-4">
+                    <div class="card p-4 lg:p-6 rounded-lg">
+                        <h3 class="text-lg lg:text-xl font-bold mb-3 lg:mb-4">Theme & Appearance</h3>
+                        <div class="space-y-3">
                             <div>
-                                <label class="block text-sm font-semibold mb-2">Current Theme</label>
-                                <div class="flex gap-2">
-                                    <span class="px-4 py-2 rounded-lg bg-gray-700">${this.theme === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode'}</span>
-                                    <button id="themeChangeBtn" class="btn-primary px-4 py-2 rounded-lg font-semibold">Switch Theme</button>
+                                <label class="block text-xs lg:text-sm font-semibold mb-2">Current Theme</label>
+                                <div class="flex flex-col sm:flex-row gap-2">
+                                    <span class="px-3 py-2 rounded-lg bg-gray-700 text-sm">${this.theme === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode'}</span>
+                                    <button id="themeChangeBtn" class="btn-primary px-3 py-2 rounded-lg font-semibold text-sm">Switch</button>
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-sm font-semibold mb-2">Store Logo</label>
-                                <input type="file" id="logoUpload" class="input-field w-full p-2 rounded-lg" accept="image/*">
-                                <p class="text-xs text-gray-400 mt-2">Upload a logo for your store (PNG, JPG)</p>
-                                <button type="button" id="uploadLogoBtn" class="btn-primary w-full p-2 rounded-lg font-semibold mt-2">Upload Logo</button>
+                                <label class="block text-xs lg:text-sm font-semibold mb-1">Store Logo</label>
+                                <input type="file" id="logoUpload" class="input-field w-full p-2 rounded-lg text-sm" accept="image/*">
+                                <p class="text-xs text-gray-400 mt-1">PNG, JPG supported</p>
+                                <button type="button" id="uploadLogoBtn" class="btn-primary w-full p-2 rounded-lg font-semibold mt-2 text-sm">Upload Logo</button>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-4 lg:p-6 rounded-lg">
+                        <h3 class="text-lg lg:text-xl font-bold mb-3 lg:mb-4 text-red-500">Account</h3>
+                        <div class="space-y-3">
+                            <p class="text-xs lg:text-sm text-gray-400 mb-4">Logged in as: <span class="font-semibold">${this.user.username || 'User'}</span></p>
+                            <button id="logoutBtnSetup" class="btn-danger w-full p-2 rounded-lg font-semibold text-sm lg:text-base hover:bg-red-700">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1051,6 +1061,8 @@ class SwiftStock {
             });
 
             document.getElementById('themeChangeBtn').addEventListener('click', () => this.toggleTheme());
+
+            document.getElementById('logoutBtnSetup').addEventListener('click', () => this.logout());
 
             document.getElementById('uploadLogoBtn').addEventListener('click', async () => {
                 const file = document.getElementById('logoUpload').files[0];
