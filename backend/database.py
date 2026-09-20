@@ -35,6 +35,31 @@ async def get_db():
         finally:
             await session.close()
 
+_db_initialized = False
+
 async def init_db():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    global _db_initialized
+    if _db_initialized:
+        return
+
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
+        # Create default admin user if needed
+        async with AsyncSessionLocal() as db:
+            from sqlalchemy import select
+            from backend.models.user import User
+            from backend.config import DEFAULT_USERNAME, DEFAULT_PASSWORD
+
+            result = await db.execute(select(User).where(User.username == DEFAULT_USERNAME))
+            user = result.scalars().first()
+            if not user:
+                user = User(username=DEFAULT_USERNAME, is_admin=True)
+                user.set_password(DEFAULT_PASSWORD)
+                db.add(user)
+                await db.commit()
+
+        _db_initialized = True
+    except Exception as e:
+        print(f"Database initialization error: {e}")
