@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, Enum
 from sqlalchemy.sql import func
 from backend.database import Base
+from datetime import datetime
 import enum
 
 class StockStatus(str, enum.Enum):
@@ -22,7 +23,7 @@ class Product(Base):
     reorder_level = Column(Integer, default=10)
     status = Column(String, default=StockStatus.OUT_OF_STOCK)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=True)
 
 class StockTransaction(Base):
     __tablename__ = "stock_transactions"

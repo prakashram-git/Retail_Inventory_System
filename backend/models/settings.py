@@ -12,4 +12,4 @@ class AppSettings(Base):
     currency_symbol = Column(String, default="$")
     low_stock_threshold = Column(Integer, default=10)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=True)

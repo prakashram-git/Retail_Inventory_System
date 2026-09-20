@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from backend.database import get_db
 from backend.models.inventory import Product, StockTransaction, StockStatus
 from backend.schemas import ProductCreate, ProductUpdate, ProductResponse, StockAdjustment
@@ -116,9 +116,9 @@ async def delete_product(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    await db.delete(product)
+    await db.execute(delete(Product).where(Product.id == product_id))
     await db.commit()
-    return {"message": "Product deleted successfully"}
+    return {"detail": "Product deleted successfully"}
 
 @router.get("/categories")
 async def get_categories(
