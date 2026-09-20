@@ -7,7 +7,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from fastapi.middleware.wsgi import WSGIMiddleware
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -53,6 +52,23 @@ app.include_router(pos.router)
 app.include_router(reports.router)
 app.include_router(settings.router)
 
+# Serve frontend static files and index.html
+frontend_dir = Path(__file__).parent.parent / "frontend"
+
+if frontend_dir.exists():
+    try:
+        app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
+    except Exception as e:
+        print(f"Warning: Could not mount static files: {e}")
+
+@app.get("/")
+async def read_root():
+    """Serve index.html for SPA routing"""
+    index_file = frontend_dir / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file, media_type="text/html")
+    return {"message": "SwiftStock API - Frontend not found"}
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
@@ -60,3 +76,15 @@ async def health():
 @app.get("/api/health")
 async def api_health():
     return {"status": "ok", "service": "SwiftStock API"}
+
+# Catch-all route for SPA - serves index.html for any unknown routes
+@app.get("/{full_path:path}")
+async def catch_all(full_path: str):
+    """Serve index.html for all non-API routes to support SPA routing"""
+    if full_path.startswith("api/") or full_path.startswith("static/"):
+        return {"error": "Not found"}
+
+    index_file = frontend_dir / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file, media_type="text/html")
+    return {"error": "Frontend not found"}
