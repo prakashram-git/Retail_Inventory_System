@@ -301,7 +301,7 @@ class SwiftStock {
                     </div>
                     <div class="flex gap-2">
                         <button type="submit" class="btn-primary flex-1 p-2 rounded-lg font-semibold">Save Product</button>
-                        <button type="button" class="btn-secondary flex-1 p-2 rounded-lg font-semibold bg-gray-700 text-white" onclick="this.closest('div').parentElement.remove()">Cancel</button>
+                        <button type="button" class="btn-secondary flex-1 p-2 rounded-lg font-semibold bg-gray-700 text-white">Cancel</button>
                     </div>
                 </form>
             </div>
@@ -326,6 +326,11 @@ class SwiftStock {
                 alert('Error: ' + error.message);
             }
         });
+
+        // Cancel button
+        modal.querySelector('button:last-of-type').addEventListener('click', () => {
+            modal.remove();
+        });
     }
 
     showAdjustStockModal(productId, productName) {
@@ -346,7 +351,7 @@ class SwiftStock {
                     </div>
                     <div class="flex gap-2">
                         <button type="submit" class="btn-primary flex-1 p-2 rounded-lg font-semibold">Add Stock</button>
-                        <button type="button" class="btn-secondary flex-1 p-2 rounded-lg font-semibold bg-gray-700 text-white" onclick="this.closest('div').parentElement.remove()">Cancel</button>
+                        <button type="button" class="btn-secondary flex-1 p-2 rounded-lg font-semibold bg-gray-700 text-white">Cancel</button>
                     </div>
                 </form>
             </div>
@@ -366,6 +371,11 @@ class SwiftStock {
             } catch(error) {
                 alert('Error: ' + error.message);
             }
+        });
+
+        // Cancel button
+        modal.querySelector('button:last-of-type').addEventListener('click', () => {
+            modal.remove();
         });
     }
 
