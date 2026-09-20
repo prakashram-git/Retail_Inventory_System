@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SwiftStock | Retail command center</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { display: ['"DM Sans"', 'sans-serif'], sans: ['"DM Sans"', 'sans-serif'] }, colors: { ink: '#15171b', mint: '#336ef3', coral: '#ea4335', paper: '#f7f8fa', primary: '#336ef3', muted: '#f0f2f5', line: '#dcdfe5' } } } };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --blue: #3b82f6;
+      --surface: #f3f6fb;
+      --panel: #ffffff;
+      --line: rgba(15, 23, 42, 0.09);
+      --text: #111827;
+      --subtle: #4b5563;
+      --muted: #6b7280;
+    }
+    html, body {
+      background: linear-gradient(180deg, #edf3fb 0%, #f7fafc 100%);
+      color: var(--text);
+      font-size: 13px;
+      min-height: 100%;
+    }
+    body {
+      background: linear-gradient(180deg, #edf3fb 0%, #f7fafc 100%);
+      color: var(--text);
+    }
+    #nav .nav-item {
+      color: #334155;
+      background: transparent;
+      border: 1px solid rgba(15,23,42,0.04);
+    }
+    .nav-active {
+      background: linear-gradient(135deg, rgba(59,130,246,.96), rgba(37,99,235,.96));
+      color: #fff;
+      box-shadow: 0 10px 26px rgba(59,130,246,.22);
+      border-color: rgba(96,165,250,.8);
+    }
+    .panel {
+      background: rgba(255,255,255,.96);
+      border: 1px solid var(--line);
+      box-shadow: 0 8px 18px rgba(2,6,23,.06);
+      color: var(--text);
+    }
+    .fade-in { animation: rise .3s ease both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    input, select {
+      outline: none;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: #111827;
+    }
+    input:focus, select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,.18); }
+    aside { background: rgba(244,246,250,.95) !important; border-color: var(--line) !important; }
+    main { background: transparent; color: var(--text); }
+    #page-title { letter-spacing: -0.05em; line-height: 1.05; color: #111827; }
+    #eyebrow { color: #2563eb !important; letter-spacing: .18em; }
+    table tr { transition: background .15s ease; }
+    table tbody tr:hover { background: rgba(59,130,246,.06); }
+    button { transition: background-color .15s ease, color .15s ease, border-color .15s ease, transform .15s ease; }
+    @media (min-width: 1024px) { main { padding: 28px 36px !important; } }
+
+    body.dark-mode {
+      --surface: #101724;
+      --panel: #1b2431;
+      --line: rgba(148, 163, 184, 0.18);
+      --text: #edf3ff;
+      --subtle: #9bb0cd;
+      --muted: #dfe7f3;
+      background: linear-gradient(180deg, #0a0e18 0%, #141d2b 100%);
+      color: var(--text);
+    }
+    .dark-mode main, .dark-mode aside, .dark-mode .panel, .dark-mode td, .dark-mode th, .dark-mode p, .dark-mode h1, .dark-mode h2, .dark-mode h3, .dark-mode label, .dark-mode span, .dark-mode div {
+      color: var(--text);
+    }
+    .dark-mode #page-title { color: #edf3ff; }
+    .dark-mode #eyebrow { color: #8cb5ff !important; }
+    .dark-mode #nav .nav-item { color: #d6e2f4; }
+    .dark-mode aside { background: #111827 !important; }
+    .dark-mode .panel, .dark-mode .bg-white { background: #1b2431 !important; border-color: var(--line) !important; color: var(--text); }
+    .dark-mode input, .dark-mode select { background: rgba(15,23,42,.8); border-color: var(--line); color: var(--text); }
+    .dark-mode table thead, .dark-mode .bg-\[\#f4f7f2\], .dark-mode .bg-\[\#f0f6ee\], .dark-mode .bg-\[\#f0f2f5\] { background: rgba(15,23,42,.88) !important; }
+    .dark-mode table tbody tr:hover { background: rgba(59,130,246,.08); }
+    .dark-mode [class*="text-[#718078]"], .dark-mode [class*="text-[#56595e]"], .dark-mode [class*="text-[#8b978f]"], .dark-mode [class*="text-[#8a8e95]"] { color: #dfe7f3 !important; }
+    body:not(.dark-mode) [class*="text-[#718078]"], body:not(.dark-mode) [class*="text-[#56595e]"], body:not(.dark-mode) [class*="text-[#8b978f]"], body:not(.dark-mode) [class*="text-[#8a8e95]"] { color: #374151 !important; }
+  </style>
+</head>
+<body class="dark-mode min-h-screen font-sans">
+  <div class="min-h-screen lg:flex">
+    <div id="system-alert" class="fixed left-0 right-0 top-0 z-20 hidden border-b border-[#f4c46a] bg-[#fff7df] px-4 py-2 text-xs font-medium text-[#9a6800] lg:pl-72"></div>
+    <aside class="w-full shrink-0 border-b border-[#dfe6de] bg-white/70 p-5 lg:min-h-screen lg:w-64 lg:border-b-0 lg:border-r lg:p-6">
+      <div class="flex items-center gap-3 mb-10">
+        <div class="grid h-11 w-11 place-items-center rounded-2xl bg-ink text-lg font-display font-bold text-mint">S<span class="text-coral">.</span></div>
+        <div><p class="font-display text-lg font-bold">SwiftStock</p><p class="text-xs text-[#718078]">Retail command center</p></div>
+      </div>
+      <nav id="nav" class="grid grid-cols-2 gap-2 lg:block lg:space-y-1">
+        <button data-view="inventory" class="nav-item nav-active flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold"><span>▦</span> Inventory</button>
+        <button data-view="pos" class="nav-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-[#718078] hover:bg-[#f0f5ef]"><span>⌁</span> POS Register</button>
+        <button data-view="procurement" class="nav-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-[#718078] hover:bg-[#f0f5ef]"><span>↗</span> Procurement</button>
+        <button data-view="reports" class="nav-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-[#718078] hover:bg-[#f0f5ef]"><span>◒</span> Reports</button>
+        <button data-view="settings" class="nav-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-[#718078] hover:bg-[#f0f5ef]"><span>⚙</span> Setup</button>
+        <button data-view="about" class="nav-item flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-[#718078] hover:bg-[#f0f5ef]"><span>i</span> About</button>
+      </nav>
+      <div class="mt-10 hidden rounded-2xl bg-ink p-4 text-white lg:block"><p class="text-xs uppercase tracking-widest text-mint">Local mode</p><p class="mt-2 text-sm text-white/75">Your data lives on this device and works offline.</p><div class="mt-5 h-1 rounded bg-white/20"><div class="h-1 w-full rounded bg-mint"></div></div><p class="mt-2 text-xs text-white/50">Database healthy</p></div>
+    </aside>
+    <main class="min-w-0 flex-1 px-5 py-6 lg:px-10 lg:py-9">
+      <header class="mb-6 flex flex-wrap items-end justify-between gap-4"><div><p id="eyebrow" class="mb-1 text-[11px] font-bold uppercase tracking-[.16em] text-[#336ef3]">Inventory catalog</p><h1 id="page-title" class="font-display text-2xl font-bold tracking-tight lg:text-3xl">Good morning, merchant.</h1></div><div class="flex items-center gap-3"><span id="clock" class="hidden text-xs text-[#56595e] sm:inline"></span><div class="grid h-9 w-9 place-items-center rounded-xl bg-[#336ef3] text-xs font-bold text-white">SS</div></div></header>
+      <div id="app" class="fade-in"></div>
+      <footer class="mt-6 grid grid-cols-3 border-t border-[#dcdfe5] pt-4 text-center sm:grid-cols-4"><div><p class="text-[10px] font-medium uppercase tracking-wide text-[#8a8e95]">Order value</p><p id="footer-order" class="mt-1 text-sm font-semibold">$0.00</p></div><div><p class="text-[10px] font-medium uppercase tracking-wide text-[#8a8e95]">Total units</p><p id="footer-units" class="mt-1 text-sm font-semibold">0 items</p></div><div><p class="text-[10px] font-medium uppercase tracking-wide text-[#8a8e95]">Low alerts</p><p id="footer-alerts" class="mt-1 text-sm font-semibold">0 flags</p></div><div class="hidden sm:block"><p class="text-[10px] font-medium uppercase tracking-wide text-[#8a8e95]">System</p><p class="mt-1 text-sm font-semibold text-[#34a853]">Online</p></div></footer>
+    </main>
+  </div>
+  <div id="toast" class="fixed bottom-5 right-5 hidden max-w-sm rounded-xl bg-ink px-4 py-3 text-sm text-white shadow-xl"></div>
+<script>
+const $ = (s) => document.querySelector(s);
+const state = { products: [], cart: [], configuration: null };
+const money = (n) => `${state.configuration?.currency_symbol || '$'}${Number(n || 0).toFixed(2)}`;
+const esc = (v) => String(v ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+async function api(url, options={}) { const response = await fetch(url, options); const data = await response.json(); if (!response.ok) throw new Error(data.detail || 'Request failed'); return data; }
+function toast(message, bad=false) { const el=$('#toast'); el.textContent=message; el.className=`fixed bottom-5 right-5 max-w-sm rounded-xl px-4 py-3 text-sm text-white shadow-xl ${bad?'bg-coral':'bg-ink'}`; setTimeout(()=>el.classList.add('hidden'), 3200); }
+function setHeading(eyebrow,title) { $('#eyebrow').textContent=eyebrow; $('#page-title').textContent=title; }
+function applyTheme(theme) {
+  document.body.classList.toggle('dark-mode', theme === 'dark' || theme === undefined || theme === null || theme === '');
+}
+function statusPill(status) { const critical=status==='CRITICAL'; return `<span class="rounded-full px-2 py-1 text-[10px] font-bold ${critical?'bg-[#ffe1db] text-[#c44936]':'bg-[#fff0cf] text-[#a76b00]'}">${status}</span>`; }
+async function load() { const data=await api('/api/dashboard'); state.products=data.products; state.configuration=data.configuration; applyTheme(data.configuration.theme || 'light'); $('#system-alert').textContent=data.alerts.length?`${data.alerts.length} inventory item${data.alerts.length===1?'':'s'} below minimum stock threshold. Review reorder signals in the ledger.`:''; $('#system-alert').classList.toggle('hidden',!data.alerts.length); $('#footer-units').textContent=`${data.products.reduce((sum,p)=>sum+p.quantity_on_hand,0)} items`; $('#footer-alerts').textContent=`${data.alerts.length} flags`; $('#footer-order').textContent=money(data.today_sales); renderInventory(data); }
+function renderInventory(data) { setHeading('Inventory catalog','Keep every shelf in view.'); $('#app').innerHTML=`<section class="mt-6"><div class="panel overflow-hidden rounded-2xl"><div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#e3e8df] p-5"><div><h2 class="font-display text-lg font-bold">Product catalog</h2><p class="text-sm text-[#718078]">Track stock, product details, and replenishment status.</p></div><label class="cursor-pointer rounded-xl bg-ink px-4 py-2 text-sm font-bold text-white hover:bg-[#293c35]">Import CSV<input id="csv-input" type="file" accept=".csv" class="hidden"></label></div><div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-[#f4f7f2] text-xs uppercase tracking-wider text-[#718078]"><tr><th class="px-5 py-3">SKU</th><th class="px-5 py-3">Product Name</th><th class="px-5 py-3">Category</th><th class="px-5 py-3">In Stock</th><th class="px-5 py-3">Unit Price</th><th class="px-5 py-3">Status</th><th class="px-5 py-3">Action</th></tr></thead><tbody>${data.products.map(p=>`<tr class="border-t border-[#edf0eb]"><td class="px-5 py-4 font-medium">${esc(p.sku)}</td><td class="px-5 py-4"><span class="font-semibold">${esc(p.name)}</span></td><td class="px-5 py-4">${esc(p.category || 'Uncategorized')}</td><td class="px-5 py-4 font-semibold">${p.quantity_on_hand}</td><td class="px-5 py-4">${money(p.selling_price)}</td><td class="px-5 py-4">${p.stock_status==='HEALTHY'?'<span class="rounded-full bg-[#dff6e8] px-2 py-1 text-[10px] font-bold text-[#278253]">HEALTHY</span>':statusPill(p.stock_status)}</td><td class="px-5 py-4"><button data-reorder="${p.id}" class="rounded-lg bg-[#e8f3ff] px-2.5 py-1.5 text-[11px] font-semibold text-[#1d4ed8] hover:bg-[#dfeeff]">Reorder</button></td></tr>`).join('') || '<tr><td colspan="7" class="px-5 py-12 text-center text-[#718078]">No products yet. Import a CSV to get started.</td></tr>'}</tbody></table></div></div></section>`; const input=$('#csv-input'); if(input) input.onchange=importCsv; document.querySelectorAll('[data-reorder]').forEach(btn=>{ btn.onclick=async()=>{ const id=Number(btn.dataset.reorder); const product=state.products.find(item=>item.id===id); if(!product) return; try { await api(`/api/procurement/${id}/receive`); toast(`${product.name} restocked successfully`); await load(); } catch(error) { toast(error.message,true); } }; }); }
+async function importCsv(e) { if(!e.target.files[0]) return; const form=new FormData(); form.append('file',e.target.files[0]); try { const result=await api('/api/inventory/import-csv',{method:'POST',body:form}); toast(`${result.imported_rows} rows imported, ${result.skipped_corrupted_rows} skipped`); await load(); } catch(error) { toast(error.message,true); } }
+function renderPos() {
+  setHeading('POS register','Add stock and keep shelves full.');
+  $('#app').innerHTML=`<div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]"><section class="panel rounded-2xl p-5"><div class="flex items-center justify-between"><div><h2 class="font-display text-lg font-bold">Stock maintenance</h2><p class="text-sm text-[#718078]">Add units to existing products or create a new inventory item.</p></div><span class="rounded-full bg-[#e7f5ec] px-3 py-1 text-xs font-bold text-[#278253]">Stock mode</span></div><div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">${state.products.map(p=>`<div class="rounded-2xl border border-[#e3e8df] bg-white p-4 text-left transition hover:-translate-y-0.5 hover:border-[#43a978]"><div class="flex justify-between"><span class="text-xs font-bold uppercase tracking-wider text-[#8b978f]">${esc(p.category || 'General')}</span><span class="text-xs text-[#8b978f]">${p.quantity_on_hand} on hand</span></div><p class="mt-5 font-semibold">${esc(p.name)}</p><p class="mt-1 font-display text-xl font-bold">${money(p.selling_price)}</p><button data-stock="${p.id}" class="mt-4 w-full rounded-lg bg-[#e8f3ff] px-3 py-2 text-xs font-semibold text-[#1d4ed8] hover:bg-[#dfeeff]">Add stock</button></div>`).join('') || '<p class="text-sm text-[#718078]">No products yet. Create one on the right to begin receiving stock.</p>'}</div></section><aside class="panel rounded-2xl p-5"><h2 class="font-display text-xl font-bold">Add inventory</h2><form id="stock-form" class="mt-5 space-y-3"><label class="block text-sm font-semibold">SKU<input name="sku" placeholder="SKU or leave blank" class="mt-2 w-full rounded-xl px-3 py-3 font-normal"></label><label class="block text-sm font-semibold">Product name<input name="name" required placeholder="Product name" class="mt-2 w-full rounded-xl px-3 py-3 font-normal"></label><label class="block text-sm font-semibold">Category<input name="category" placeholder="Category" class="mt-2 w-full rounded-xl px-3 py-3 font-normal"></label><div class="grid gap-3 sm:grid-cols-2"><label class="block text-sm font-semibold">Quantity<input name="quantity" type="number" min="1" value="1" class="mt-2 w-full rounded-xl px-3 py-3 font-normal"></label><label class="block text-sm font-semibold">Reorder level<input name="reorder_level" type="number" min="0" value="10" class="mt-2 w-full rounded-xl px-3 py-3 font-normal"></label></div><div class="grid gap-3 sm:grid-cols-2"><label class="block text-sm font-semibold">Cost price<input name="cost_price" type="number" min="0" step="0.01" value="0" class="mt-2 w-full rounded-xl px-3 py-3 font-normal"></label><label class="block text-sm font-semibold">Unit price<input name="selling_price" type="number" min="0" step="0.01" value="0" class="mt-2 w-full rounded-xl px-3 py-3 font-normal"></label></div><button class="w-full rounded-xl bg-ink px-4 py-3 text-sm font-bold text-white">Add to stock</button></form></aside></div>`;
+
+  document.querySelectorAll('[data-stock]').forEach(button => {
+    button.onclick = () => {
+      const product = state.products.find(p => p.id === Number(button.dataset.stock));
+      if (!product) return;
+      const form = $('#stock-form');
+      if (!form) return;
+      form.querySelector('input[name="sku"]').value = product.sku || '';
+      form.querySelector('input[name="name"]').value = product.name || '';
+      form.querySelector('input[name="category"]').value = product.category || '';
+      form.querySelector('input[name="quantity"]').focus();
+    };
+  });
+
+  const form = $('#stock-form');
+  if (form) {
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const data = new FormData(e.target);
+      const payload = {
+        sku: (data.get('sku') || '').toString().trim(),
+        name: (data.get('name') || '').toString().trim(),
+        category: (data.get('category') || '').toString().trim() || null,
+        quantity: Number(data.get('quantity') || 0),
+        cost_price: Number(data.get('cost_price') || 0),
+        selling_price: Number(data.get('selling_price') || 0),
+        reorder_level: Number(data.get('reorder_level') || 0),
+      };
+      if (!payload.name) return toast('Product name is required', true);
+      if (!Number.isFinite(payload.quantity) || payload.quantity < 1) return toast('Quantity must be at least 1', true);
+      try {
+        const result = await api('/api/inventory/add-stock', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        toast(`${result.quantity_on_hand} units now in stock for ${result.name}`);
+        form.reset();
+        await load();
+      } catch (error) {
+        toast(error.message, true);
+      }
+    };
+  }
+}
+
+async function renderReports() { const r=await api('/api/reports'); setHeading('Reports','Know what is moving and what is not.'); $('#app').innerHTML=`<div class="grid gap-4 md:grid-cols-3"><div class="rounded-2xl bg-ink p-5 text-white"><p class="text-sm text-white/60">Total revenue</p><p class="mt-3 font-display text-3xl font-bold">${money(r.revenue)}</p></div><div class="panel rounded-2xl p-5"><p class="text-sm text-[#718078]">Net margin</p><p class="mt-3 font-display text-3xl font-bold text-[#278253]">${money(r.margin)}</p></div><div class="panel rounded-2xl p-5"><p class="text-sm text-[#718078]">Dead stock watch</p><p class="mt-3 font-display text-3xl font-bold">${r.dead_stock.length}</p></div></div><section class="panel mt-6 rounded-2xl p-5"><h2 class="font-display text-lg font-bold">Recent transactions</h2><div class="mt-5 space-y-3">${r.sales.map(s=>`<div class="flex items-center justify-between border-b border-[#edf0eb] pb-3 text-sm"><span>#${s.id} · ${new Date(s.timestamp).toLocaleString()}</span><span class="font-bold">${money(s.total)}</span></div>`).join('')||'<p class="text-sm text-[#718078]">No sales recorded yet.</p>'}</div></section>`; }
+async function renderSettings() { const c=await api('/api/settings'); setHeading('Setup preferences','Make the register feel like yours.'); $('#app').innerHTML=`<form id="settings-form" class="panel max-w-2xl rounded-2xl p-6"><h2 class="font-display text-lg font-bold">Store configuration</h2><p class="mt-1 text-sm text-[#718078]">These values appear on every receipt.</p><div class="mt-6 grid gap-4 sm:grid-cols-2"><label class="text-sm font-semibold">Store name<input name="store_name" value="${esc(c.store_name)}" class="mt-2 w-full rounded-xl px-3 py-3 font-normal"></label><label class="text-sm font-semibold">Tax rate %<input name="tax_rate_percentage" type="number" step="0.1" value="${c.tax_rate_percentage}" class="mt-2 w-full rounded-xl px-3 py-3 font-normal"></label><label class="text-sm font-semibold">Currency symbol<input name="currency_symbol" value="${esc(c.currency_symbol)}" class="mt-2 w-full rounded-xl px-3 py-3 font-normal"></label><label class="flex items-center gap-3 pt-7 text-sm font-semibold"><input name="auto_print_receipt_on_checkout" type="checkbox" ${c.auto_print_receipt_on_checkout?'checked':''} class="h-4 w-4"> Auto-print receipt</label><label class="text-sm font-semibold sm:col-span-2">Receipt header<input name="receipt_header_message" value="${esc(c.receipt_header_message)}" class="mt-2 w-full rounded-xl px-3 py-3 font-normal"></label><label class="text-sm font-semibold sm:col-span-2">Receipt footer<input name="receipt_footer_message" value="${esc(c.receipt_footer_message)}" class="mt-2 w-full rounded-xl px-3 py-3 font-normal"></label></div><button class="mt-6 rounded-xl bg-ink px-5 py-3 text-sm font-bold text-white">Save preferences</button></form>`; $('#settings-form').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);try{await api('/api/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({store_name:f.get('store_name'),tax_rate_percentage:Number(f.get('tax_rate_percentage')),currency_symbol:f.get('currency_symbol'),receipt_header_message:f.get('receipt_header_message'),receipt_footer_message:f.get('receipt_footer_message'),auto_print_receipt_on_checkout:f.get('auto_print_receipt_on_checkout')==='on'})});toast('Preferences saved');await load();}catch(error){toast(error.message,true);}}; }
+function renderSimple(view) { const content={procurement:['Procurement log','Check incoming stock into your shelves.','Products with ordered units appear here.'],about:['About SwiftStock','Small retail, less friction.','SwiftStock is a local-first POS and inventory workspace. Your data stays in the local SQLite database. To begin, import products from Inventory, open POS Register to ring up a sale, use Quick-Add for unbarcoded items, and review low-stock flags before creating replenishment orders. Back up the database by copying database.db while the app is stopped.']}; const [title,sub,body]=content[view]; setHeading(title,title); $('#app').innerHTML=`<section class="panel max-w-2xl rounded-2xl p-6"><h2 class="font-display text-2xl font-bold">${title}</h2><p class="mt-2 text-[#718078]">${sub}</p><p class="mt-6 leading-7 text-[#718078]">${body}</p>${view==='about'?'<div class="mt-6 grid gap-3 sm:grid-cols-3"><div class="rounded-xl bg-[#f0f2f5] p-4"><p class="text-xs font-bold text-[#336ef3]">01</p><p class="mt-2 text-sm font-semibold">Import catalog</p><p class="mt-1 text-xs leading-5 text-[#56595e]">Upload the required CSV columns in Inventory.</p></div><div class="rounded-xl bg-[#f0f2f5] p-4"><p class="text-xs font-bold text-[#336ef3]">02</p><p class="mt-2 text-sm font-semibold">Ring up sales</p><p class="mt-1 text-xs leading-5 text-[#56595e]">Select products or use Quick-Add in POS.</p></div><div class="rounded-xl bg-[#f0f2f5] p-4"><p class="text-xs font-bold text-[#336ef3]">03</p><p class="mt-2 text-sm font-semibold">Watch alerts</p><p class="mt-1 text-xs leading-5 text-[#56595e]">Review low stock and receive procurement.</p></div></div>':''}${view==='procurement'?`<div class="mt-6 space-y-3">${state.products.filter(p=>p.quantity_on_order>0).map(p=>`<div class="flex items-center justify-between rounded-xl bg-[#f4f7f2] p-4"><div><p class="font-semibold">${esc(p.name)}</p><p class="text-xs text-[#718078]">${p.quantity_on_order} units ordered</p></div><button data-receive="${p.id}" class="rounded-lg bg-ink px-3 py-2 text-xs font-bold text-white">Mark received</button></div>`).join('')||'<p class="text-sm text-[#718078]">No open purchase orders.</p>'}</div>`:''}</section>`; document.querySelectorAll('[data-receive]').forEach(b=>b.onclick=async()=>{await api(`/api/procurement/${b.dataset.receive}/receive`,{method:'POST'});toast('Inventory received');await load();renderSimple('procurement');}); }
+async function navigate(view) { document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('nav-active',b.dataset.view===view)); if(view==='inventory') return load(); if(view==='pos') return renderPos(); if(view==='reports') return renderReports(); if(view==='settings') return renderSettings(); renderSimple(view); }
+const settingsObserver = new MutationObserver(() => { const form=$('#settings-form'); if(!form || $('#theme-setting')) return; const wrapper=document.createElement('label'); wrapper.id='theme-setting'; wrapper.className='text-sm font-semibold'; wrapper.innerHTML='<span>Page appearance</span><select name="theme" class="mt-2 w-full rounded-xl px-3 py-3 font-normal"><option value="light">Light mode</option><option value="dark">Dark mode</option></select>'; const grid=form.querySelector('.grid'); grid.insertBefore(wrapper, grid.children[3]); const select=wrapper.querySelector('select'); select.value=state.configuration?.theme || 'light'; select.onchange=async()=>{ try { const current=await api('/api/settings'); await api('/api/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...current,theme:select.value})}); applyTheme(select.value); toast(`${select.value==='dark'?'Dark':'Light'} mode enabled`); } catch(error) { toast(error.message,true); } }; }); settingsObserver.observe($('#app'),{childList:true,subtree:true});
+document.querySelectorAll('.nav-item').forEach(b=>b.onclick=()=>navigate(b.dataset.view)); setInterval(()=>$('#clock').textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),1000); load().catch(e=>toast(e.message,true));
+</script>
+</body>
+</html>

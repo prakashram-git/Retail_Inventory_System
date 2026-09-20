@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftStock - Retail Inventory System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-primary: #1f2937;
+            --bg-secondary: #111827;
+            --text-primary: #f3f4f6;
+            --text-secondary: #d1d5db;
+            --border-color: #374151;
+            --accent-color: #3b82f6;
+        }
+
+        body.light-mode {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --accent-color: #2563eb;
+        }
+
+        * {
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
+        }
+
+        body.light-mode * {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .input-field {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .sidebar {
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+        }
+
+        .nav-item {
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            color: var(--accent-color);
+            background-color: var(--bg-primary);
+        }
+
+        .table-head {
+            background-color: var(--bg-primary);
+            color: var(--text-secondary);
+        }
+
+        table {
+            background-color: var(--bg-secondary);
+        }
+
+        table tr {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-in-stock {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .status-low-stock {
+            background-color: #f59e0b;
+            color: white;
+        }
+
+        .status-out-of-stock {
+            background-color: #ef4444;
+            color: white;
+        }
+    </style>
+</head>
+<body class="transition-colors duration-300">
+    <div id="app" class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 h-screen overflow-y-auto fixed left-0 top-0 z-40">
+            <div class="p-6 border-b border-gray-700">
+                <div class="flex items-center gap-3">
+                    <div id="logoContainer" class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
+                        <span id="logoText">S</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold">SwiftStock</h1>
+                        <p class="text-xs text-gray-400">Inventory System</p>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="p-4 space-y-2">
+                <button class="nav-item active w-full text-left p-3 rounded-lg flex items-center gap-3" data-page="dashboard">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item w-full text-left p-3 rounded-lg flex items-center gap-3" data-page="inventory">
+                    <i class="fas fa-boxes"></i>
+                    <span>Inventory</span>
+                </button>
+                <button class="nav-item w-full text-left p-3 rounded-lg flex items-center gap-3" data-page="pos">
+                    <i class="fas fa-cash-register"></i>
+                    <span>POS Register</span>
+                </button>
+                <button class="nav-item w-full text-left p-3 rounded-lg flex items-center gap-3" data-page="procurement">
+                    <i class="fas fa-truck"></i>
+                    <span>Procurement</span>
+                </button>
+                <button class="nav-item w-full text-left p-3 rounded-lg flex items-center gap-3" data-page="reports">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </button>
+                <hr class="border-gray-700 my-4">
+                <button class="nav-item w-full text-left p-3 rounded-lg flex items-center gap-3" data-page="setup">
+                    <i class="fas fa-cog"></i>
+                    <span>Setup</span>
+                </button>
+                <button class="nav-item w-full text-left p-3 rounded-lg flex items-center gap-3" data-page="about">
+                    <i class="fas fa-circle-info"></i>
+                    <span>About</span>
+                </button>
+                <button class="nav-item w-full text-left p-3 rounded-lg flex items-center gap-3" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="ml-64 flex-1 flex flex-col">
+            <!-- Header -->
+            <div class="card border-0 border-b p-4 sticky top-0 z-30 flex justify-between items-center">
+                <div>
+                    <h2 id="pageTitle" class="text-2xl font-bold">Dashboard</h2>
+                    <p id="pageSubtitle" class="text-sm text-gray-400">Welcome to SwiftStock</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-700" title="Toggle Theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <div class="text-right">
+                        <p id="currentUser" class="font-semibold">User</p>
+                        <p class="text-xs text-gray-400">Admin</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page Content -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <div id="pageContent">
+                    <!-- Content loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="card p-8 rounded-lg w-96 shadow-xl">
+            <h1 class="text-3xl font-bold mb-2">SwiftStock</h1>
+            <p class="text-gray-400 mb-6">Retail Inventory Management</p>
+
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Username</label>
+                    <input type="text" id="loginUsername" class="input-field w-full p-2 rounded-lg" placeholder="Enter username" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Password</label>
+                    <input type="password" id="loginPassword" class="input-field w-full p-2 rounded-lg" placeholder="Enter password" required>
+                </div>
+                <button type="submit" class="btn-primary w-full p-2 rounded-lg font-semibold mt-6">Login</button>
+            </form>
+
+            <p class="text-center text-sm text-gray-400 mt-4">
+                Don't have an account? <button type="button" id="switchToRegister" class="text-blue-500 hover:underline">Register here</button>
+            </p>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="card p-8 rounded-lg w-96 shadow-xl">
+            <h1 class="text-3xl font-bold mb-2">Create Admin Account</h1>
+            <p class="text-gray-400 mb-6">Register as Administrator</p>
+
+            <form id="registerForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Username</label>
+                    <input type="text" id="registerUsername" class="input-field w-full p-2 rounded-lg" placeholder="Choose username" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Email (Optional)</label>
+                    <input type="email" id="registerEmail" class="input-field w-full p-2 rounded-lg" placeholder="Enter email">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Password</label>
+                    <input type="password" id="registerPassword" class="input-field w-full p-2 rounded-lg" placeholder="Choose password" required>
+                </div>
+                <button type="submit" class="btn-primary w-full p-2 rounded-lg font-semibold mt-6">Register</button>
+            </form>
+
+            <p class="text-center text-sm text-gray-400 mt-4">
+                Already have an account? <button type="button" id="switchToLogin" class="text-blue-500 hover:underline">Login here</button>
+            </p>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed bottom-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50">
+        <p id="toastMessage"></p>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
