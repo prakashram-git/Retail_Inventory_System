@@ -904,8 +904,20 @@ class SwiftStock {
         }
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'API Error');
+            let errorMessage = 'API Error';
+            try {
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const error = await response.json();
+                    errorMessage = error.detail || error.message || 'API Error';
+                } else {
+                    const text = await response.text();
+                    errorMessage = text || `HTTP ${response.status} Error`;
+                }
+            } catch (e) {
+                errorMessage = `HTTP ${response.status} Error`;
+            }
+            throw new Error(errorMessage);
         }
 
         return await response.json();
