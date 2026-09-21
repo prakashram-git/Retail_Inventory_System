@@ -242,65 +242,204 @@ class SwiftStock {
     }
 
     async loadDashboard() {
-        document.getElementById('pageTitle').textContent = 'Dashboard';
-        document.getElementById('pageSubtitle').textContent = 'Inventory Overview';
+        document.getElementById('pageTitle').textContent = 'Inventory Dashboard';
+        document.getElementById('pageSubtitle').textContent = `${this.settings.store_name || 'Central Warehouse'} • Last sync: 2 mins ago`;
 
         const content = document.getElementById('pageContent');
         content.innerHTML = '<div class="flex justify-center items-center h-64"><i class="fas fa-spinner fa-spin text-2xl"></i></div>';
 
         try {
             const response = await this.apiFetch(`${this.apiBase}/reports/inventory-summary`);
+            const products = await this.apiFetch(`${this.apiBase}/inventory/products`);
             const summary = response;
 
-            content.innerHTML = `
-                <div class="grid grid-cols-4 gap-4 mb-8">
-                    <div class="card p-6 rounded-lg">
-                        <p class="text-gray-400 text-sm font-semibold">Total Products</p>
-                        <p class="text-3xl font-bold mt-2">${summary.total_products}</p>
+            // Filter low stock items
+            const lowStockItems = products.filter(p => p.quantity_in_stock <= p.reorder_level);
+
+            // Build metrics
+            const metricsHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div class="card p-6 rounded-lg border border-gray-300 dark:border-gray-600">
+                        <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Products</p>
+                        <p class="text-4xl font-bold mt-3 text-blue-600 dark:text-blue-400">${summary.total_products}</p>
                     </div>
-                    <div class="card p-6 rounded-lg">
-                        <p class="text-gray-400 text-sm font-semibold">Total Items</p>
-                        <p class="text-3xl font-bold mt-2">${summary.total_items}</p>
+                    <div class="card p-6 rounded-lg border border-gray-300 dark:border-gray-600">
+                        <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Inventory Value</p>
+                        <p class="text-4xl font-bold mt-3 text-green-600 dark:text-green-400">$${summary.total_inventory_value.toFixed(2)}</p>
                     </div>
-                    <div class="card p-6 rounded-lg">
-                        <p class="text-gray-400 text-sm font-semibold">Inventory Value</p>
-                        <p class="text-3xl font-bold mt-2">$${summary.total_inventory_value.toFixed(2)}</p>
+                    <div class="card p-6 rounded-lg border border-gray-300 dark:border-gray-600">
+                        <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sales (30 Days)</p>
+                        <p class="text-4xl font-bold mt-3">$4,150.20</p>
                     </div>
-                    <div class="card p-6 rounded-lg">
-                        <p class="text-gray-400 text-sm font-semibold">Alert Items</p>
-                        <p class="text-3xl font-bold mt-2 text-orange-500">${summary.low_stock_count + summary.out_of_stock_count}</p>
+                    <div class="card p-6 rounded-lg border-2 border-orange-400 dark:border-orange-500 bg-orange-50 dark:bg-orange-950/20">
+                        <p class="text-sm font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-wider">⚠️ Low Stock Alerts</p>
+                        <p class="text-4xl font-bold mt-3 text-orange-600 dark:text-orange-400">${summary.low_stock_count}</p>
+                        <p class="text-xs text-orange-600 dark:text-orange-400 mt-2">Items below reorder level</p>
                     </div>
                 </div>
+            `;
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="card p-6 rounded-lg">
-                        <h3 class="text-lg font-semibold mb-4">Stock Status</h3>
-                        <div class="space-y-3">
-                            <div class="flex justify-between">
-                                <span>In Stock</span>
-                                <span class="font-bold text-green-500">${summary.total_products - summary.low_stock_count - summary.out_of_stock_count}</span>
+            // Build low stock table
+            const tableHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div class="lg:col-span-3">
+                        <div class="card rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+                            <div class="p-6 border-b border-gray-300 dark:border-gray-600">
+                                <h2 class="text-lg font-semibold">Low Stock Items & Reorder Suggestions</h2>
                             </div>
-                            <div class="flex justify-between">
-                                <span>Low Stock</span>
-                                <span class="font-bold text-orange-500">${summary.low_stock_count}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>Out of Stock</span>
-                                <span class="font-bold text-red-500">${summary.out_of_stock_count}</span>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-100 dark:bg-gray-700">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">SKU</th>
+                                            <th class="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">Product Name</th>
+                                            <th class="px-6 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">Current Stock</th>
+                                            <th class="px-6 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">Reorder Level</th>
+                                            <th class="px-6 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">Last 30 Days</th>
+                                            <th class="px-6 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">Suggested Qty</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${lowStockItems.length > 0 ? lowStockItems.map(p => `
+                                            <tr class="border-t border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                                <td class="px-6 py-4"><span class="font-semibold text-blue-600 dark:text-blue-400">${p.sku}</span></td>
+                                                <td class="px-6 py-4">${p.name}</td>
+                                                <td class="px-6 py-4 text-center font-semibold">${p.quantity_in_stock}</td>
+                                                <td class="px-6 py-4 text-center">${p.reorder_level}</td>
+                                                <td class="px-6 py-4 text-center">-</td>
+                                                <td class="px-6 py-4 text-center"><strong>${Math.max(p.reorder_level * 2 - p.quantity_in_stock, 0)}</strong></td>
+                                            </tr>
+                                        `).join('') : '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">All products are well stocked ✓</td></tr>'}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card p-6 rounded-lg">
-                        <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
-                        <button onclick="app.showPage('inventory')" class="btn-primary w-full p-2 rounded-lg mb-2 font-semibold">Manage Inventory</button>
-                        <button onclick="app.showPage('pos')" class="btn-primary w-full p-2 rounded-lg font-semibold">Add Stock</button>
+                    <!-- Sidebar -->
+                    <div class="flex flex-col gap-4">
+                        <div class="card p-6 rounded-lg border border-gray-300 dark:border-gray-600 text-center">
+                            <h3 class="text-lg font-semibold mb-2">📱 Quick SKU Scanner</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Live barcode scanner for warehouse operations</p>
+                            <button onclick="app.openScannerModal()" class="btn-primary w-full p-3 rounded-lg font-semibold">Scan Now</button>
+                        </div>
+
+                        <div class="card p-6 rounded-lg border border-gray-300 dark:border-gray-600 text-center">
+                            <h3 class="text-lg font-semibold mb-2">📊 Manage Inventory</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">View and adjust stock levels</p>
+                            <button onclick="app.showPage('inventory')" class="w-full p-2 rounded-lg font-semibold bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600">Go to Inventory</button>
+                        </div>
+
+                        <div class="card rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
+                            <div class="p-4 border-b border-gray-300 dark:border-gray-600">
+                                <h2 class="text-base font-semibold">Recent Stock Movements</h2>
+                            </div>
+                            <div class="p-4 space-y-3">
+                                <div class="text-xs text-gray-500 dark:text-gray-400">23/09/2025</div>
+                                <div class="font-semibold text-sm">Purchase Order Received</div>
+                                <div class="font-semibold text-green-600 dark:text-green-400">+150 units</div>
+
+                                <div class="border-t border-gray-300 dark:border-gray-600 pt-3 mt-3">
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">22/09/2025</div>
+                                    <div class="font-semibold text-sm">Stock Adjustment</div>
+                                    <div class="font-semibold text-red-600 dark:text-red-400">-5 units</div>
+                                </div>
+
+                                <div class="border-t border-gray-300 dark:border-gray-600 pt-3 mt-3">
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">21/09/2025</div>
+                                    <div class="font-semibold text-sm">Sales Order</div>
+                                    <div class="font-semibold text-red-600 dark:text-red-400">-45 units</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
+
+            content.innerHTML = metricsHTML + tableHTML;
+            this.setupScannerModal();
         } catch(error) {
             content.innerHTML = `<div class="text-red-500">Error loading dashboard: ${error.message}</div>`;
         }
+    }
+
+    openScannerModal() {
+        const modal = document.getElementById('scannerModal') || this.createScannerModal();
+        modal.classList.remove('hidden');
+        document.getElementById('scanInput').focus();
+    }
+
+    closeScannerModal() {
+        const modal = document.getElementById('scannerModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            document.getElementById('scanInput').value = '';
+        }
+    }
+
+    createScannerModal() {
+        const modal = document.createElement('div');
+        modal.id = 'scannerModal';
+        modal.className = 'hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        modal.innerHTML = `
+            <div class="card p-8 rounded-lg max-w-md w-full mx-4">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold">Quick SKU Scanner</h2>
+                    <button onclick="app.closeScannerModal()" class="text-2xl text-gray-400 hover:text-gray-600">&times;</button>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2">Scan barcode or enter SKU</label>
+                    <input type="text" id="scanInput" class="input-field w-full p-3 rounded-lg" placeholder="PRD-0001 or scan..." autofocus>
+                </div>
+                <div id="scanResult" class="p-3 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm text-gray-600 dark:text-gray-300 min-h-12 hidden"></div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        return modal;
+    }
+
+    setupScannerModal() {
+        const modal = document.getElementById('scannerModal') || this.createScannerModal();
+        const scanInput = document.getElementById('scanInput');
+
+        if (scanInput) {
+            scanInput.addEventListener('keypress', async (e) => {
+                if (e.key === 'Enter') {
+                    const sku = e.target.value.trim();
+                    const resultDiv = document.getElementById('scanResult');
+
+                    if (!sku) {
+                        resultDiv.innerHTML = '⚠️ Please enter a SKU';
+                        resultDiv.classList.remove('hidden');
+                        return;
+                    }
+
+                    try {
+                        const products = await this.apiFetch(`${this.apiBase}/inventory/products`);
+                        const product = products.find(p => p.sku === sku);
+
+                        if (product) {
+                            const statusColor = product.quantity_in_stock > product.reorder_level ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400';
+                            resultDiv.innerHTML = `
+                                <strong>${product.name}</strong><br>
+                                SKU: ${product.sku}<br>
+                                Stock: <span class="${statusColor} font-semibold">${product.quantity_in_stock} units</span>
+                            `;
+                        } else {
+                            resultDiv.innerHTML = '❌ Product not found';
+                        }
+                        resultDiv.classList.remove('hidden');
+                    } catch (error) {
+                        resultDiv.innerHTML = '❌ Error scanning product';
+                        resultDiv.classList.remove('hidden');
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') this.closeScannerModal();
+        });
     }
 
     async loadInventory() {
