@@ -693,92 +693,179 @@
     </div>
 
     <!-- Login Screen -->
-    <div id="loginModal" class="hidden fixed inset-0 flex items-center justify-center z-50" style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%);" data-test-id="login-modal">
-        <div class="max-w-md w-full mx-4">
-            <!-- Logo Section -->
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
+    <div id="loginModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);" data-test-id="login-modal">
+        <div class="max-w-md w-full">
+            <!-- Hero Section with Branding -->
+            <div class="text-center mb-10">
+                <div class="w-20 h-20 rounded-xl bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 flex items-center justify-center text-white font-bold text-3xl mx-auto mb-6 shadow-2xl transform hover:scale-105 transition-transform">
                     S
                 </div>
-                <h1 class="text-4xl font-bold text-white mb-2">SwiftStock</h1>
-                <p class="text-gray-300 text-lg">Inventory Management System</p>
+                <h1 class="text-5xl font-bold text-white mb-3 tracking-tight">SwiftStock</h1>
+                <p class="text-blue-300 text-lg font-light">Enterprise Inventory Management</p>
+                <p class="text-slate-400 text-sm mt-2">Real-time stock control • Multi-location • Advanced analytics</p>
             </div>
 
-            <!-- Login Form -->
-            <div class="card p-8 rounded-lg shadow-2xl">
-                <h2 class="text-2xl font-bold text-white mb-6">Welcome Back</h2>
-
-                <form id="loginForm" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-semibold mb-2 text-gray-200">Username</label>
-                        <input type="text" id="loginUsername" class="input-field w-full p-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Enter your username" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold mb-2 text-gray-200">Password</label>
-                        <input type="password" id="loginPassword" class="input-field w-full p-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Enter your password" required>
-                    </div>
-                    <button type="submit" class="btn-primary w-full p-3 rounded-lg font-semibold mt-6 bg-blue-600 hover:bg-blue-700 text-white">Login</button>
-                </form>
-
-                <div class="my-4 flex items-center">
-                    <div class="flex-1 border-t border-gray-600"></div>
-                    <div class="px-3 text-gray-400 text-sm">OR</div>
-                    <div class="flex-1 border-t border-gray-600"></div>
+            <!-- Login Form Card -->
+            <div class="card p-8 rounded-xl shadow-2xl border border-slate-700 backdrop-blur-sm bg-slate-800/80">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-white mb-2">Welcome Back</h2>
+                    <p class="text-slate-400">Sign in to your inventory dashboard</p>
                 </div>
 
-                <p class="text-center text-gray-300 text-sm">
-                    Don't have an account? <button type="button" id="switchToRegister" class="text-blue-400 hover:text-blue-300 font-semibold">Register here</button>
-                </p>
+                <form id="loginForm" class="space-y-6">
+                    <!-- Username Field -->
+                    <div class="group">
+                        <label class="block text-sm font-semibold mb-3 text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fas fa-user text-blue-500"></i>
+                            Username
+                        </label>
+                        <input type="text" id="loginUsername" class="input-field w-full px-4 py-3 rounded-lg border border-slate-600 bg-slate-700/50 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" placeholder="admin" required>
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="group">
+                        <label class="block text-sm font-semibold mb-3 text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fas fa-lock text-blue-500"></i>
+                            Password
+                        </label>
+                        <input type="password" id="loginPassword" class="input-field w-full px-4 py-3 rounded-lg border border-slate-600 bg-slate-700/50 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" placeholder="••••••••" required>
+                    </div>
+
+                    <!-- Remember Me & Forgot Password -->
+                    <div class="flex items-center justify-between text-sm">
+                        <label class="flex items-center gap-2 text-slate-300 hover:text-slate-200 cursor-pointer">
+                            <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-slate-700/50 text-blue-500 cursor-pointer">
+                            Remember me
+                        </label>
+                        <a href="#" class="text-blue-400 hover:text-blue-300 font-semibold">Forgot password?</a>
+                    </div>
+
+                    <!-- Login Button -->
+                    <button type="submit" class="btn-primary w-full py-3 rounded-lg font-semibold mt-8 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95 uppercase tracking-wider text-sm font-bold">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Sign In
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                <div class="my-6 flex items-center gap-4">
+                    <div class="flex-1 border-t border-slate-600"></div>
+                    <span class="text-slate-500 text-sm font-light">or</span>
+                    <div class="flex-1 border-t border-slate-600"></div>
+                </div>
+
+                <!-- Register Link -->
+                <div class="bg-slate-700/30 p-4 rounded-lg border border-slate-600/50 text-center">
+                    <p class="text-slate-300 text-sm">
+                        New to SwiftStock?
+                        <button type="button" id="switchToRegister" class="text-blue-400 hover:text-blue-300 font-bold ml-1 hover:underline">Create an account</button>
+                    </p>
+                </div>
+
+                <!-- Demo Credentials -->
+                <div class="mt-6 p-4 bg-amber-500/10 border border-amber-600/30 rounded-lg">
+                    <p class="text-xs text-amber-200 font-semibold mb-2 flex items-center gap-2">
+                        <i class="fas fa-info-circle"></i> Demo Credentials
+                    </p>
+                    <p class="text-xs text-amber-100/70">Username: <span class="font-mono font-bold text-amber-200">admin</span></p>
+                    <p class="text-xs text-amber-100/70">Password: <span class="font-mono font-bold text-amber-200">admin123</span></p>
+                </div>
             </div>
 
-            <p class="text-center text-gray-500 text-xs mt-6">© 2026 SwiftStock. All rights reserved.</p>
+            <!-- Footer -->
+            <div class="mt-8 text-center">
+                <p class="text-slate-500 text-xs font-light">
+                    <i class="fas fa-shield-alt mr-1 text-green-500"></i>
+                    Secure • Enterprise-Grade • Real-time Sync
+                </p>
+                <p class="text-slate-600 text-xs mt-3">© 2026 SwiftStock. Enterprise Inventory Management.</p>
+            </div>
         </div>
     </div>
 
     <!-- Register Screen -->
-    <div id="registerModal" class="hidden fixed inset-0 flex items-center justify-center z-50" style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%);">
-        <div class="max-w-md w-full mx-4">
-            <!-- Logo Section -->
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
+    <div id="registerModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);">
+        <div class="max-w-md w-full">
+            <!-- Hero Section with Branding -->
+            <div class="text-center mb-10">
+                <div class="w-20 h-20 rounded-xl bg-gradient-to-br from-green-500 via-emerald-600 to-teal-700 flex items-center justify-center text-white font-bold text-3xl mx-auto mb-6 shadow-2xl transform hover:scale-105 transition-transform">
                     S
                 </div>
-                <h1 class="text-4xl font-bold text-white mb-2">SwiftStock</h1>
-                <p class="text-gray-300 text-lg">Inventory Management System</p>
+                <h1 class="text-5xl font-bold text-white mb-3 tracking-tight">SwiftStock</h1>
+                <p class="text-emerald-300 text-lg font-light">Enterprise Inventory Management</p>
+                <p class="text-slate-400 text-sm mt-2">Join thousands managing inventory efficiently</p>
             </div>
 
-            <!-- Register Form -->
-            <div class="card p-8 rounded-lg shadow-2xl">
-                <h2 class="text-2xl font-bold text-white mb-6">Create Account</h2>
-
-                <form id="registerForm" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-semibold mb-2 text-gray-200">Username</label>
-                        <input type="text" id="registerUsername" class="input-field w-full p-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Choose a username" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold mb-2 text-gray-200">Email (Optional)</label>
-                        <input type="email" id="registerEmail" class="input-field w-full p-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Enter your email">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold mb-2 text-gray-200">Password</label>
-                        <input type="password" id="registerPassword" class="input-field w-full p-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Choose a password" required>
-                    </div>
-                    <button type="submit" class="btn-primary w-full p-3 rounded-lg font-semibold mt-6 bg-blue-600 hover:bg-blue-700 text-white">Create Account</button>
-                </form>
-
-                <div class="my-4 flex items-center">
-                    <div class="flex-1 border-t border-gray-600"></div>
-                    <div class="px-3 text-gray-400 text-sm">OR</div>
-                    <div class="flex-1 border-t border-gray-600"></div>
+            <!-- Register Form Card -->
+            <div class="card p-8 rounded-xl shadow-2xl border border-slate-700 backdrop-blur-sm bg-slate-800/80">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-white mb-2">Create Your Account</h2>
+                    <p class="text-slate-400">Get started with inventory management today</p>
                 </div>
 
-                <p class="text-center text-gray-300 text-sm">
-                    Already have an account? <button type="button" id="switchToLogin" class="text-blue-400 hover:text-blue-300 font-semibold">Login here</button>
-                </p>
+                <form id="registerForm" class="space-y-6">
+                    <!-- Username Field -->
+                    <div class="group">
+                        <label class="block text-sm font-semibold mb-3 text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fas fa-user text-emerald-500"></i>
+                            Username
+                        </label>
+                        <input type="text" id="registerUsername" class="input-field w-full px-4 py-3 rounded-lg border border-slate-600 bg-slate-700/50 text-white placeholder-slate-500 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all" placeholder="Choose a username" required>
+                    </div>
+
+                    <!-- Email Field -->
+                    <div class="group">
+                        <label class="block text-sm font-semibold mb-3 text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fas fa-envelope text-emerald-500"></i>
+                            Email (Optional)
+                        </label>
+                        <input type="email" id="registerEmail" class="input-field w-full px-4 py-3 rounded-lg border border-slate-600 bg-slate-700/50 text-white placeholder-slate-500 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all" placeholder="you@company.com">
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="group">
+                        <label class="block text-sm font-semibold mb-3 text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fas fa-lock text-emerald-500"></i>
+                            Password
+                        </label>
+                        <input type="password" id="registerPassword" class="input-field w-full px-4 py-3 rounded-lg border border-slate-600 bg-slate-700/50 text-white placeholder-slate-500 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all" placeholder="••••••••" required>
+                    </div>
+
+                    <!-- Terms Checkbox -->
+                    <label class="flex items-start gap-3 text-sm text-slate-300 hover:text-slate-200 cursor-pointer group">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-slate-700/50 text-emerald-500 cursor-pointer mt-0.5" required>
+                        <span>I agree to the <a href="#" class="text-emerald-400 hover:text-emerald-300 font-semibold">Terms of Service</a> and <a href="#" class="text-emerald-400 hover:text-emerald-300 font-semibold">Privacy Policy</a></span>
+                    </label>
+
+                    <!-- Register Button -->
+                    <button type="submit" class="btn-primary w-full py-3 rounded-lg font-semibold mt-8 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95 uppercase tracking-wider text-sm font-bold">
+                        <i class="fas fa-user-plus mr-2"></i>Create Account
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                <div class="my-6 flex items-center gap-4">
+                    <div class="flex-1 border-t border-slate-600"></div>
+                    <span class="text-slate-500 text-sm font-light">or</span>
+                    <div class="flex-1 border-t border-slate-600"></div>
+                </div>
+
+                <!-- Login Link -->
+                <div class="bg-slate-700/30 p-4 rounded-lg border border-slate-600/50 text-center">
+                    <p class="text-slate-300 text-sm">
+                        Already have an account?
+                        <button type="button" id="switchToLogin" class="text-emerald-400 hover:text-emerald-300 font-bold ml-1 hover:underline">Sign in instead</button>
+                    </p>
+                </div>
             </div>
 
-            <p class="text-center text-gray-500 text-xs mt-6">© 2026 SwiftStock. All rights reserved.</p>
+            <!-- Footer -->
+            <div class="mt-8 text-center">
+                <p class="text-slate-500 text-xs font-light">
+                    <i class="fas fa-shield-alt mr-1 text-green-500"></i>
+                    Secure • Enterprise-Grade • GDPR Compliant
+                </p>
+                <p class="text-slate-600 text-xs mt-3">© 2026 SwiftStock. Enterprise Inventory Management.</p>
+            </div>
         </div>
     </div>
 
