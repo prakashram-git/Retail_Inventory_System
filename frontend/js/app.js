@@ -283,35 +283,40 @@ class SwiftStock {
             const tableHTML = `
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     <div class="lg:col-span-3">
-                        <div class="card rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
-                            <div class="p-6 border-b border-gray-300 dark:border-gray-600">
-                                <h2 class="text-lg font-semibold">Low Stock Items & Reorder Suggestions</h2>
+                        <div class="card rounded-xl overflow-hidden shadow-md">
+                            <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-600 bg-white dark:bg-slate-800">
+                                <h2 class="text-lg font-bold text-gray-800 dark:text-white">Low Stock Items & Reorder Suggestions</h2>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-sm">
-                                    <thead class="bg-gray-100 dark:bg-gray-700">
+                                    <thead class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
                                         <tr>
-                                            <th class="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">SKU</th>
-                                            <th class="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">Product Name</th>
-                                            <th class="px-6 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">Current Stock</th>
-                                            <th class="px-6 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">Reorder Level</th>
-                                            <th class="px-6 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">Last 30 Days</th>
-                                            <th class="px-6 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">Suggested Qty</th>
+                                            <th class="px-6 py-4 text-left font-bold text-gray-700 dark:text-gray-300 text-xs uppercase tracking-wider">SKU</th>
+                                            <th class="px-6 py-4 text-left font-bold text-gray-700 dark:text-gray-300 text-xs uppercase tracking-wider">Product Name</th>
+                                            <th class="px-6 py-4 text-center font-bold text-gray-700 dark:text-gray-300 text-xs uppercase tracking-wider">Current Stock</th>
+                                            <th class="px-6 py-4 text-center font-bold text-gray-700 dark:text-gray-300 text-xs uppercase tracking-wider">Reorder Level</th>
+                                            <th class="px-6 py-4 text-center font-bold text-gray-700 dark:text-gray-300 text-xs uppercase tracking-wider">Last 30 Days</th>
+                                            <th class="px-6 py-4 text-center font-bold text-gray-700 dark:text-gray-300 text-xs uppercase tracking-wider">Suggested Qty</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        ${lowStockItems.length > 0 ? lowStockItems.map(p => `
-                                            <tr class="border-t border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                                <td class="px-6 py-4"><span class="font-semibold text-blue-600 dark:text-blue-400">${p.sku}</span></td>
-                                                <td class="px-6 py-4">${p.name}</td>
-                                                <td class="px-6 py-4 text-center font-semibold">${p.quantity_in_stock}</td>
-                                                <td class="px-6 py-4 text-center">${p.reorder_level}</td>
-                                                <td class="px-6 py-4 text-center">-</td>
-                                                <td class="px-6 py-4 text-center"><strong>${Math.max(p.reorder_level * 2 - p.quantity_in_stock, 0)}</strong></td>
+                                    <tbody class="divide-y divide-gray-200 dark:divide-gray-600">
+                                        ${lowStockItems.length > 0 ? lowStockItems.map((p, idx) => `
+                                            <tr class="hover:bg-blue-50 dark:hover:bg-gray-700/30 transition-colors ${idx % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-gray-50 dark:bg-gray-700/20'}">
+                                                <td class="px-6 py-4"><span class="font-bold text-blue-600 dark:text-blue-400">${p.sku}</span></td>
+                                                <td class="px-6 py-4 text-gray-800 dark:text-gray-200">${p.name}</td>
+                                                <td class="px-6 py-4 text-center font-semibold text-gray-800 dark:text-gray-200">${p.quantity_in_stock}</td>
+                                                <td class="px-6 py-4 text-center text-gray-700 dark:text-gray-300">${p.reorder_level}</td>
+                                                <td class="px-6 py-4 text-center text-gray-600 dark:text-gray-400">-</td>
+                                                <td class="px-6 py-4 text-center"><strong class="text-gray-800 dark:text-white">${Math.max(p.reorder_level * 2 - p.quantity_in_stock, 0)}</strong></td>
                                             </tr>
-                                        `).join('') : '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">All products are well stocked ✓</td></tr>'}
+                                        `).join('') : '<tr><td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">All products are well stocked ✓</td></tr>'}
                                     </tbody>
                                 </table>
+                            </div>
+                            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-200 dark:border-gray-600 flex justify-end">
+                                <button class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-sm">
+                                    Review & Generate Purchase Order
+                                </button>
                             </div>
                         </div>
                     </div>
