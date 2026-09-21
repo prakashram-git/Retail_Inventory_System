@@ -1,0 +1,508 @@
+// Prisma Schema for SwiftStock Enterprise Edition
+// Database: PostgreSQL
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ============================================================================
+// AUTH & USERS
+// ============================================================================
+
+model User {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  username    String    @unique
+  password    String    // bcrypt hashed
+  role        Role      @default(STAFF)
+
+  managedLocations Location[] @relation("LocationManagers")
+  auditLogs   AuditLog[]
+  adjustmentsCreated StockAdjustment[] @relation("CreatedBy")
+  adjustmentsApproved StockAdjustment[] @relation("ApprovedBy")
+
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([email])
+  @@index([role])
+}
+
+enum Role {
+  ADMIN
+  STORE_MANAGER
+  WAREHOUSE_MANAGER
+  CASHIER
+  CLERK
+}
+
+// ============================================================================
+// ORGANIZATION & LOCATIONS
+// ============================================================================
+
+model Company {
+  id          String    @id @default(cuid())
+  name        String
+  allowNegativeStock Boolean @default(false)
+  negativeStockThreshold Int @default(0)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Location {
+  id            String    @id @default(cuid())
+  name          String
+  type          LocationType
+  address       String
+  city          String
+  state         String?
+  country       String
+  postalCode    String?
+
+  managers      User[]    @relation("LocationManagers")
+
+  // Relations
+  inventoryLevels InventoryLevel[]
+  transfersFrom   StockTransfer[] @relation("FromLocation")
+  transfersTo     StockTransfer[] @relation("ToLocation")
+  purchaseOrdersDestination PurchaseOrder[] @relation("DestinationLocation")
+  adjustments     StockAdjustment[]
+  auditCounts     StocktakeCount[]
+
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([type])
+}
+
+enum LocationType {
+  WAREHOUSE
+  RETAIL_STORE
+  THIRD_PARTY_LOGISTICS
+  OFFICE
+}
+
+// ============================================================================
+// PRODUCTS & INVENTORY
+// ============================================================================
+
+model Product {
+  id            String    @id @default(cuid())
+  sku           String    @unique
+  name          String
+  description   String?
+  category      String
+  barcode       String?   @unique
+
+  // Pricing & Reorder
+  unitPrice     Float
+  costPrice     Float
+  reorderLevel  Int       @default(0)
+  targetStock   Int       @default(0)
+
+  // Relations
+  inventoryLevels InventoryLevel[]
+  suppliers     ProductSupplier[]
+  ledgerEntries InventoryLedgerEntry[]
+  stockAdjustments StockAdjustment[]
+  poItems       PurchaseOrderItem[]
+  transferItems StockTransferItem[]
+  stocktakeCounts StocktakeCount[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([sku])
+  @@index([barcode])
+  @@index([category])
+}
+
+model InventoryLevel {
+  id            String    @id @default(cuid())
+  productId     String
+  locationId    String
+
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  location      Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  // Location in warehouse
+  aisle         String?
+  bin           String?
+
+  // Stock values
+  onHand        Int       @default(0)
+  committed     Int       @default(0)    // Allocated to pending orders
+  available     Int       @default(0)    // onHand - committed
+  incoming      Int       @default(0)    // From purchase orders in transit
+
+  // Thresholds
+  reorderPoint  Int       @default(0)
+  targetStock   Int       @default(0)
+
+  // Audit
+  lastCountedAt DateTime?
+  lastCountedBy String?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([productId, locationId])
+  @@index([locationId])
+  @@index([productId])
+  @@index([available])  // For low stock queries
+}
+
+// ============================================================================
+// SUPPLIERS & PURCHASE ORDERS
+// ============================================================================
+
+model Supplier {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  phone         String?
+  website       String?
+
+  paymentTerms  String    @default("Net 30")
+  leadTimeDays  Int       @default(7)
+  currency      String    @default("USD")
+
+  // Relations
+  products      ProductSupplier[]
+  purchaseOrders PurchaseOrder[]
+
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model ProductSupplier {
+  id            String    @id @default(cuid())
+  productId     String
+  supplierId    String
+
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplier      Supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  supplierSku   String?
+  supplierPrice Float
+  minOrderQty   Int       @default(1)
+  leadTimeDays  Int
+
+  @@unique([productId, supplierId])
+  @@index([supplierId])
+}
+
+model PurchaseOrder {
+  id            String    @id @default(cuid())
+  poNumber      String    @unique
+  supplierId    String
+  supplier      Supplier  @relation(fields: [supplierId], references: [id])
+
+  destinationLocationId String
+  destinationLocation   Location @relation("DestinationLocation", fields: [destinationLocationId], references: [id])
+
+  status        POStatus  @default(DRAFT)
+
+  totalCost     Float     @default(0)
+  items         PurchaseOrderItem[]
+  receivingLog  POReceivingLog[]
+
+  createdAt     DateTime  @default(now())
+  sentDate      DateTime?
+  expectedDeliveryDate DateTime?
+  receivedDate  DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  @@index([status])
+  @@index([supplierId])
+  @@index([destinationLocationId])
+}
+
+enum POStatus {
+  DRAFT
+  SENT
+  PARTIALLY_RECEIVED
+  RECEIVED
+  CANCELLED
+}
+
+model PurchaseOrderItem {
+  id            String    @id @default(cuid())
+  poId          String
+  productId     String
+
+  po            PurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
+  product       Product   @relation(fields: [productId], references: [id])
+
+  quantity      Int
+  receivedQty   Int       @default(0)
+  unitCost      Float
+
+  @@index([poId])
+}
+
+model POReceivingLog {
+  id            String    @id @default(cuid())
+  poId          String
+  po            PurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
+
+  quantityReceived Int
+  discrepancyReason String?
+  timestamp     DateTime  @default(now())
+
+  @@index([poId])
+}
+
+// ============================================================================
+// STOCK TRANSFERS
+// ============================================================================
+
+model StockTransfer {
+  id            String    @id @default(cuid())
+  fromLocationId String
+  toLocationId  String
+
+  fromLocation  Location  @relation("FromLocation", fields: [fromLocationId], references: [id])
+  toLocation    Location  @relation("ToLocation", fields: [toLocationId], references: [id])
+
+  status        TransferStatus @default(PENDING)
+
+  items         StockTransferItem[]
+
+  createdBy     String
+  createdAt     DateTime  @default(now())
+  sentDate      DateTime?
+  receivedDate  DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  @@index([status])
+  @@index([fromLocationId])
+  @@index([toLocationId])
+}
+
+enum TransferStatus {
+  PENDING
+  IN_TRANSIT
+  RECEIVED
+  CANCELLED
+  REJECTED
+}
+
+model StockTransferItem {
+  id            String    @id @default(cuid())
+  transferId    String
+  productId     String
+
+  transfer      StockTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  product       Product   @relation(fields: [productId], references: [id])
+
+  quantity      Int
+  receivedQty   Int       @default(0)
+  discrepancyNotes String?
+
+  @@index([transferId])
+}
+
+// ============================================================================
+// STOCK ADJUSTMENTS
+// ============================================================================
+
+model StockAdjustment {
+  id            String    @id @default(cuid())
+  locationId    String
+  location      Location  @relation(fields: [locationId], references: [id])
+  productId     String
+  product       Product   @relation(fields: [productId], references: [id])
+
+  reason        AdjustmentReason
+  quantity      Int       // Can be positive or negative
+  notes         String?
+
+  status        ApprovalStatus @default(PENDING)
+
+  createdBy     String
+  createdByUser User      @relation("CreatedBy", fields: [createdBy], references: [id])
+  approvedBy    String?
+  approvedByUser User?     @relation("ApprovedBy", fields: [approvedBy], references: [id])
+
+  createdAt     DateTime  @default(now())
+  approvedAt    DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  @@index([locationId])
+  @@index([status])
+}
+
+enum AdjustmentReason {
+  SPOILAGE
+  SCRAP
+  RECOUNT_DISCREPANCY
+  THEFT
+  LOSS_IN_TRANSIT
+  DAMAGE
+  INVENTORY_CORRECTION
+  OTHER
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ============================================================================
+// STOCKTAKE / CYCLE COUNTING
+// ============================================================================
+
+model Stocktake {
+  id            String    @id @default(cuid())
+  locationId    String
+  location      Location  @relation(fields: [locationId], references: [id])
+
+  type          StocktakeType @default(CYCLE_COUNT)
+  status        StocktakeStatus @default(IN_PROGRESS)
+
+  counts        StocktakeCount[]
+
+  startedBy     String
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  @@index([locationId])
+  @@index([status])
+}
+
+enum StocktakeType {
+  CYCLE_COUNT
+  FULL_INVENTORY
+  SPOT_CHECK
+}
+
+enum StocktakeStatus {
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  ADJUSTMENT_PENDING
+}
+
+model StocktakeCount {
+  id            String    @id @default(cuid())
+  stocktakeId   String
+  stocktake     Stocktake @relation(fields: [stocktakeId], references: [id], onDelete: Cascade)
+
+  productId     String
+  product       Product   @relation(fields: [productId], references: [id])
+  locationId    String
+  location      Location  @relation(fields: [locationId], references: [id])
+
+  countedQty    Int
+  bookQty       Int       // From database
+  discrepancy   Int       // countedQty - bookQty
+
+  countedBy     String
+  countedAt     DateTime  @default(now())
+
+  @@index([stocktakeId])
+  @@index([productId])
+}
+
+// ============================================================================
+// INVENTORY LEDGER (IMMUTABLE)
+// ============================================================================
+
+model InventoryLedgerEntry {
+  id            String    @id @default(cuid())
+  productId     String
+  locationId    String?   // NULL for consolidated entries
+
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  delta         Int       // +/- quantity
+  runningBalance Int
+
+  referenceType LedgerReferenceType
+  referenceId   String?
+
+  unitCost      Float?
+  totalCost     Float?
+
+  createdAt     DateTime  @default(now())
+
+  @@index([productId])
+  @@index([locationId])
+  @@index([referenceType])
+}
+
+enum LedgerReferenceType {
+  PURCHASE_ORDER
+  SALES_ORDER
+  STOCK_TRANSFER
+  STOCK_ADJUSTMENT
+  STOCKTAKE
+  INITIAL_INVENTORY
+  RETURN_FROM_CUSTOMER
+  RETURN_TO_SUPPLIER
+}
+
+// ============================================================================
+// AUDIT LOG
+// ============================================================================
+
+model AuditLog {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+
+  action        String    // CREATE, UPDATE, DELETE, APPROVE, RECEIVE, COUNT
+  tableName     String
+  recordId      String
+  changes       Json?     // {before: {}, after: {}}
+
+  ipAddress     String?
+  userAgent     String?
+
+  createdAt     DateTime  @default(now())
+
+  @@index([userId])
+  @@index([tableName])
+  @@index([action])
+}
+
+// ============================================================================
+// COMPANY SETTINGS
+// ============================================================================
+
+model CompanySettings {
+  id            String    @id @default(cuid())
+
+  // Inventory
+  allowNegativeStock Boolean @default(false)
+  negativeStockThreshold Int @default(0)
+
+  // Valuation method
+  valuationMethod ValuationMethod @default(WEIGHTED_AVERAGE)
+
+  // Notifications
+  lowStockAlertEnabled Boolean @default(true)
+  lowStockAlertQty Int @default(5)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum ValuationMethod {
+  WEIGHTED_AVERAGE
+  FIFO
+  LIFO
+  STANDARD_COST
+}
