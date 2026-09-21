@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from typing import Optional
 
@@ -12,14 +12,12 @@ class UserLogin(BaseModel):
     password: str
 
 class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     username: str
     email: Optional[str]
     is_admin: bool
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -49,6 +47,7 @@ class StockAdjustment(BaseModel):
     notes: Optional[str] = None
 
 class ProductResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     sku: str
     name: str
@@ -60,9 +59,6 @@ class ProductResponse(BaseModel):
     reorder_level: int
     status: str
 
-    class Config:
-        from_attributes = True
-
 class AppSettingsUpdate(BaseModel):
     store_name: Optional[str] = None
     theme: Optional[str] = None
@@ -70,10 +66,8 @@ class AppSettingsUpdate(BaseModel):
     low_stock_threshold: Optional[int] = None
 
 class AppSettingsResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     store_name: str
     theme: str
     currency_symbol: str
     low_stock_threshold: int
-
-    class Config:
-        from_attributes = True
